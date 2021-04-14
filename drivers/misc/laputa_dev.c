@@ -26,13 +26,14 @@ static long laputa_dev_ioctl(struct file* file,
         }
 
         case IOCTL_LAPUTA_REGISTER_SHARED_MEM: {
-            unsigned long base_uaddr;
+            /* [0] base_uaddr [1] mem_size */
+            unsigned long sm_info[2];
             
             rc = -EFAULT;
-            if (copy_from_user(&base_uaddr, uarg, sizeof(base_uaddr)))
+            if (copy_from_user(&sm_info, uarg, sizeof(sm_info)))
                 break;
-            pr_info("%s:%d IOCTL_LAPUTA_REGISTER_SHARED_MEM base_uaddr = %lx\n", 
-                    __func__, __LINE__, base_uaddr);
+            pr_info("%s:%d IOCTL_LAPUTA_REGISTER_SHARED_MEM base_uaddr = %lx "
+                    "mem_size = %lx\n", __func__, __LINE__, sm_info[0], sm_info[1]);
             /* TODO: record the shared memory in task_struct */
             
             rc = 0;
@@ -40,7 +41,14 @@ static long laputa_dev_ioctl(struct file* file,
         }
 
         case IOCTL_LAPUTA_REQUEST_DELEG: {
-            pr_info("%s:%d IOCTL_LAPUTA_REQUEST_DELEG\n", __func__, __LINE__);
+            /* [0] e-deleg [1] i-deleg */
+            unsigned long deleg_info[2];
+            
+            rc = -EFAULT;
+            if (copy_from_user(&deleg_info, uarg, sizeof(deleg_info)))
+                break;
+            pr_info("%s:%d IOCTL_LAPUTA_REGISTER_SHARED_MEM edeleg = %lx "
+                    "ideleg = %lx\n", __func__, __LINE__, deleg_info[0], deleg_info[1]);
             /* TODO: set deleg field in task_struct */
             rc = 0;
             break;
@@ -70,13 +78,6 @@ static int laputa_dev_release(struct inode *inode, struct file *filep)
 
 static const struct file_operations laputa_fops = {
     .owner          = THIS_MODULE,
-#if 0
-    .read           = laputa_dev_read,
-    .write          = laputa_dev_write,
-    .unlocked_ioctl = laputa_dev_ioctl,
-    .open           = laputa_dev_open,
-    .release        = laputa_dev_release,
-#endif
     .read           = NULL,
     .write          = NULL,
     .unlocked_ioctl = laputa_dev_ioctl,
@@ -99,7 +100,7 @@ static int __init laputa_dev_init(void)
         return err;
     }
 
-    pr_info("Laputa device installed\n");
+    pr_info("ULH: laputa device installed\n");
 
     return 0;
 }

@@ -10,8 +10,8 @@
     _IOR(LAPUTA_MAGIC, 1, unsigned long)
 /* TODO: base addr & size */
 #define IOCTL_LAPUTA_REGISTER_SHARED_MEM \
-    _IOW(LAPUTA_MAGIC, 2, unsigned long)
+    _IOW(LAPUTA_MAGIC, 2, unsigned long [2])
 #define IOCTL_LAPUTA_REQUEST_DELEG \
-    _IO(LAPUTA_MAGIC, 3)
+    _IOW(LAPUTA_MAGIC, 3, unsigned long [2])
 
 #endif
