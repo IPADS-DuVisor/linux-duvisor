@@ -10,6 +10,7 @@
 #include <uapi/linux/sched.h>
 
 #include <asm/current.h>
+#include <asm/ulh.h>
 
 #include <linux/pid.h>
 #include <linux/sem.h>
@@ -1347,6 +1348,8 @@ struct task_struct {
 					__mce_reserved : 62;
 	struct callback_head		mce_kill_me;
 #endif
+
+    struct ulh_data     *ulh_data;
 
 	/*
 	 * New fields for task_struct should be added above here, so that
