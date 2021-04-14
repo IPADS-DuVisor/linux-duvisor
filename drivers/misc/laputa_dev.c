@@ -65,7 +65,7 @@ static long laputa_dev_ioctl(struct file* file,
             rc = -EFAULT;
             if (copy_from_user(&deleg_info, uarg, sizeof(deleg_info)))
                 break;
-            pr_info("IOCTL_LAPUTA_REGISTER_SHARED_MEM "
+            pr_info("IOCTL_LAPUTA_REQUEST_DELEG "
                     "tgid: %d, edeleg: %lx, ideleg: %lx\n", 
                     tgid, deleg_info[0], deleg_info[1]);
 
@@ -124,6 +124,10 @@ static int laputa_dev_open(struct inode *inode, struct file *filep)
 {
     /* TODO: set up data structures for current process */
     pid_t tgid = current->tgid;
+    if (current->group_leader->ulh_data) {
+        pr_err("%s:%d tgid = %d ulh_data NOT NULL!\n", __func__, __LINE__, tgid);
+        return -EPERM;
+    }
     current->group_leader->ulh_data = kzalloc(sizeof(struct ulh_data), GFP_KERNEL);
     pr_info("%s:%d tgid = %d\n", __func__, __LINE__, tgid);
     return 0;
@@ -133,6 +137,10 @@ static int laputa_dev_release(struct inode *inode, struct file *filep)
 {
     /* TODO: clean up data structures for current process */
     pid_t tgid = current->tgid;
+    if (!current->group_leader->ulh_data) {
+        pr_err("%s:%d tgid = %d ulh_data is NULL!\n", __func__, __LINE__, tgid);
+        return -EPERM;
+    }
     kfree(current->group_leader->ulh_data);
     current->group_leader->ulh_data = NULL;
     pr_info("%s:%d tgid = %d\n", __func__, __LINE__, tgid);
