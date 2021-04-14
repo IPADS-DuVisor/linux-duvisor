@@ -2,8 +2,12 @@
 #include <linux/kernel.h>
 #include <linux/errno.h>
 #include <linux/fs.h>
+#include <linux/slab.h>
 #include <linux/miscdevice.h>
 #include <uapi/misc/laputa_dev.h>
+
+#include <asm/ulh.h>
+#include <asm/csr.h>
 
 static long laputa_dev_ioctl(struct file* file,
         unsigned int cmd, unsigned long arg)
@@ -28,14 +32,21 @@ static long laputa_dev_ioctl(struct file* file,
         case IOCTL_LAPUTA_REGISTER_SHARED_MEM: {
             /* [0] base_uaddr [1] mem_size */
             unsigned long sm_info[2];
+            pid_t tgid = current->tgid;
+            struct ulh_data *ud = current->group_leader->ulh_data;
+
+            rc = -EPERM;
+            if (!ud) break;
             
             rc = -EFAULT;
             if (copy_from_user(&sm_info, uarg, sizeof(sm_info)))
                 break;
             pr_info("%s:%d IOCTL_LAPUTA_REGISTER_SHARED_MEM base_uaddr = %lx "
                     "mem_size = %lx\n", __func__, __LINE__, sm_info[0], sm_info[1]);
-            /* TODO: record the shared memory in task_struct */
-            
+            /* TODO: xlat uaddr to kaddr */
+            ud->sm_base_addr = sm_info[0];
+            ud->sm_size = sm_info[1];
+
             rc = 0;
             break;
         }
@@ -43,13 +54,23 @@ static long laputa_dev_ioctl(struct file* file,
         case IOCTL_LAPUTA_REQUEST_DELEG: {
             /* [0] e-deleg [1] i-deleg */
             unsigned long deleg_info[2];
+            pid_t tgid = current->tgid;
+            struct ulh_data *ud = current->group_leader->ulh_data;
+
+            rc = -EPERM;
+            if (!ud) break;
             
             rc = -EFAULT;
             if (copy_from_user(&deleg_info, uarg, sizeof(deleg_info)))
                 break;
             pr_info("%s:%d IOCTL_LAPUTA_REGISTER_SHARED_MEM edeleg = %lx "
                     "ideleg = %lx\n", __func__, __LINE__, deleg_info[0], deleg_info[1]);
-            /* TODO: set deleg field in task_struct */
+            /* TODO: check validity */
+            ud->sedeleg = deleg_info[0];
+            ud->sideleg = deleg_info[1];
+            csr_write(CSR_SEDELEG, ud->sedeleg);
+            csr_write(CSR_SIDELEG, ud->sideleg);
+            
             rc = 0;
             break;
         }
@@ -65,14 +86,19 @@ static long laputa_dev_ioctl(struct file* file,
 static int laputa_dev_open(struct inode *inode, struct file *filep)
 {
     /* TODO: set up data structures for current process */
-    pr_info("%s:%d tgid = %d\n", __func__, __LINE__, task_tgid_vnr(current));
+    pid_t tgid = current->tgid;
+    current->group_leader->ulh_data = kzalloc(sizeof(struct ulh_data), GFP_KERNEL);
+    pr_info("%s:%d tgid = %d\n", __func__, __LINE__, tgid);
     return 0;
 }
 
 static int laputa_dev_release(struct inode *inode, struct file *filep)
 {
     /* TODO: clean up data structures for current process */
-    pr_info("%s:%d tgid = %d\n", __func__, __LINE__, task_tgid_vnr(current));
+    pid_t tgid = current->tgid;
+    kfree(current->group_leader->ulh_data);
+    current->group_leader->ulh_data = NULL;
+    pr_info("%s:%d tgid = %d\n", __func__, __LINE__, tgid);
     return 0;
 }
 

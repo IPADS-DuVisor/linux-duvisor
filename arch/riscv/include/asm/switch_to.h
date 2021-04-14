@@ -73,6 +73,10 @@ do {							\
 	if (has_fpu)					\
 		__switch_to_aux(__prev, __next);	\
 	((last) = __switch_to(__prev, __next));		\
+    if (__next->group_leader->ulh_data) { \
+        csr_write(CSR_SEDELEG, __next->group_leader->ulh_data->sedeleg); \
+        csr_write(CSR_SIDELEG, __next->group_leader->ulh_data->sideleg); \
+    } \
 } while (0)
 
 #endif /* _ASM_RISCV_SWITCH_TO_H */
