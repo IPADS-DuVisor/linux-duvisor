@@ -18,7 +18,7 @@ static long laputa_dev_ioctl(struct file* file,
     switch (cmd) {
         case IOCTL_LAPUTA_GET_API_VERSION: {
             unsigned long version;
-            pr_info("%s:%d IOCTL_LAPUTA_GET_API_VERSION\n", __func__, __LINE__);
+            pr_info("IOCTL_LAPUTA_GET_API_VERSION\n");
             
             rc = -EFAULT;
             version = 0x12345678;
@@ -41,8 +41,9 @@ static long laputa_dev_ioctl(struct file* file,
             rc = -EFAULT;
             if (copy_from_user(&sm_info, uarg, sizeof(sm_info)))
                 break;
-            pr_info("%s:%d IOCTL_LAPUTA_REGISTER_SHARED_MEM base_uaddr = %lx "
-                    "mem_size = %lx\n", __func__, __LINE__, sm_info[0], sm_info[1]);
+            pr_info("IOCTL_LAPUTA_REGISTER_SHARED_MEM "
+                    "tgid: %d, base_uaddr: %lx, mem_size: %lx\n", 
+                    tgid, sm_info[0], sm_info[1]);
             /* TODO: xlat uaddr to kaddr */
             ud->sm_base_addr = sm_info[0];
             ud->sm_size = sm_info[1];
@@ -56,6 +57,7 @@ static long laputa_dev_ioctl(struct file* file,
             unsigned long deleg_info[2];
             pid_t tgid = current->tgid;
             struct ulh_data *ud = current->group_leader->ulh_data;
+            unsigned long e_mask, i_mask;
 
             rc = -EPERM;
             if (!ud) break;
@@ -63,9 +65,44 @@ static long laputa_dev_ioctl(struct file* file,
             rc = -EFAULT;
             if (copy_from_user(&deleg_info, uarg, sizeof(deleg_info)))
                 break;
-            pr_info("%s:%d IOCTL_LAPUTA_REGISTER_SHARED_MEM edeleg = %lx "
-                    "ideleg = %lx\n", __func__, __LINE__, deleg_info[0], deleg_info[1]);
-            /* TODO: check validity */
+            pr_info("IOCTL_LAPUTA_REGISTER_SHARED_MEM "
+                    "tgid: %d, edeleg: %lx, ideleg: %lx\n", 
+                    tgid, deleg_info[0], deleg_info[1]);
+
+            e_mask = (1UL << EXC_INST_MISALIGNED)
+                | (1UL << EXC_INST_ACCESS)
+                | (1UL << EXC_ILLEGAL_INST)
+                | (1UL << EXC_BREAKPOINT)
+                | (1UL << EXC_LOAD_ADDR_MISALIGNED)
+                | (1UL << EXC_LOAD_ACCESS)
+                | (1UL << EXC_STORE_ADDR_MISALIGNED)
+                | (1UL << EXC_STORE_ACCESS)
+                | (1UL << EXC_SYSCALL)
+                | (1UL << EXC_INST_PAGE_FAULT)
+                | (1UL << EXC_LOAD_PAGE_FAULT)
+                | (1UL << EXC_STORE_PAGE_FAULT)
+                | (1UL << EXC_INST_GUEST_PAGE_FAULT)
+                | (1UL << EXC_LOAD_GUEST_PAGE_FAULT)
+                | (1UL << EXC_VIRT_INST)
+                | (1UL << EXC_STORE_GUEST_PAGE_FAULT);
+
+            i_mask = (1UL << IRQ_VS_SOFT)
+                | (1UL << IRQ_VS_TIMER)
+                | (1UL << IRQ_VS_EXT);
+
+            if (deleg_info[0] & ~e_mask) {
+                pr_err("%s:%d invalid exception delegation: %lx\n", 
+                        __func__, __LINE__, deleg_info[0] & ~e_mask);
+                rc = -EPERM;
+                break;
+            }
+            if (deleg_info[1] & ~i_mask) {
+                pr_err("%s:%d invalid interrupt delegation: %lx\n", 
+                        __func__, __LINE__, deleg_info[1] & ~i_mask);
+                rc = -EPERM;
+                break;
+            }
+
             ud->sedeleg = deleg_info[0];
             ud->sideleg = deleg_info[1];
             csr_write(CSR_SEDELEG, ud->sedeleg);
