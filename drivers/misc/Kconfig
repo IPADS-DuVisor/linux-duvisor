@@ -468,6 +468,8 @@ config HISI_HIKEY_USB
 
 config LAPUTA_DEV
 	tristate "Laputa device driver"
+        depends on RISCV
+        default y
 	help
 	  Say yes here to build support for the Laputa device.
 
