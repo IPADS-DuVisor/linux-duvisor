@@ -76,6 +76,9 @@ do {							\
     if (__next->group_leader->ulh_data) { \
         csr_write(CSR_SEDELEG, __next->group_leader->ulh_data->sedeleg); \
         csr_write(CSR_SIDELEG, __next->group_leader->ulh_data->sideleg); \
+    } else { \
+        csr_write(CSR_SEDELEG, 0); \
+        csr_write(CSR_SIDELEG, 0); \
     } \
 } while (0)
 
