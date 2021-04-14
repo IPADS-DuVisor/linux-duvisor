@@ -13,7 +13,7 @@
 
 #include "../../include/uapi/misc/laputa_dev.h"
 
-#define IOCTL_DRIVER_NAME "/dev/ulh/laputa_dev"
+#define IOCTL_DRIVER_NAME "/dev/laputa_dev"
 
 int open_driver(const char* driver_name) {
     printf("* Open Driver\n");

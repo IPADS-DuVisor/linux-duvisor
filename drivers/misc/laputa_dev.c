@@ -158,7 +158,7 @@ static const struct file_operations laputa_fops = {
 
 static struct miscdevice laputa_miscdev = {
     .minor          = MISC_DYNAMIC_MINOR,
-    .name           = "ulh/laputa_dev",
+    .name           = "laputa_dev",
     .fops           = &laputa_fops,
 };
 
@@ -167,7 +167,7 @@ static int __init laputa_dev_init(void)
     int err;
     err = misc_register(&laputa_miscdev);
     if (err != 0) {
-        pr_err("Could not register /dev/ulh/laputa_dev\n");
+        pr_err("Could not register /dev/laputa_dev\n");
         return err;
     }
 
