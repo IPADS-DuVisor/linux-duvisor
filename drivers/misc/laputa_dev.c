@@ -109,6 +109,8 @@ static long laputa_dev_ioctl(struct file* file,
             csr_write(CSR_SEDELEG, ud->sedeleg);
             csr_write(CSR_SIDELEG, ud->sideleg);
             
+            csr_set(CSR_HSTATUS, HSTATUS_HU);
+            
             rc = 0;
             break;
         }
