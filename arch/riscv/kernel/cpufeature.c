@@ -104,8 +104,10 @@ void riscv_fill_hwcap(void)
 			/*
 			 * TODO: X, Y and Z extension parsing for Host ISA
 			 * bitmap will be added in-future.
+             * FIXME: we use Z for HU-ext here temporarily,
+             * original: if ('a' <= isa[i] && isa[i] < 'x')
 			 */
-			if ('a' <= isa[i] && isa[i] < 'x')
+			if ('a' <= isa[i] && isa[i] <= 'z')
 				this_isa |= (1UL << (isa[i] - 'a'));
 		}
 

@@ -8,6 +8,7 @@
 
 #include <asm/ulh.h>
 #include <asm/csr.h>
+#include <asm/hwcap.h>
 
 static long laputa_dev_ioctl(struct file* file,
         unsigned int cmd, unsigned long arg)
@@ -165,6 +166,12 @@ static struct miscdevice laputa_miscdev = {
 static int __init laputa_dev_init(void)
 {
     int err;
+
+    if (!riscv_isa_extension_available(NULL, z)) {
+        pr_info("ULH: HU-extension not supported, skip installing laputa_dev\n");
+        return -ENODEV;
+    }
+
     err = misc_register(&laputa_miscdev);
     if (err != 0) {
         pr_err("Could not register /dev/laputa_dev\n");
