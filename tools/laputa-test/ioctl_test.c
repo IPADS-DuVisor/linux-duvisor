@@ -65,6 +65,10 @@ int pass(void) {
         return -1;
     }
 
+    unsigned long hustatus;
+    asm volatile("csrr %0, 0x800" : "=r" (hustatus) :: "memory");
+    printf("hustatus = %lx\n", hustatus);
+
     close_driver(IOCTL_DRIVER_NAME, fd_ioctl);
     return 0;
 }
