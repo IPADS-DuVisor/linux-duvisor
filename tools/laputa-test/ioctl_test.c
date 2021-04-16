@@ -1,6 +1,8 @@
+#define _GNU_SOURCE
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sched.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,7 +68,16 @@ int pass(void) {
     }
 
     unsigned long hustatus;
-    asm volatile("csrr %0, 0x800" : "=r" (hustatus) :: "memory");
+    int times = 10000;
+    printf("Repeat reading hustatus for %d times on 4 cores\n", times);
+    for (int i = 0; i < times; i++) {
+        cpu_set_t my_set;
+        CPU_ZERO(&my_set);
+        CPU_SET((size_t)(i % 4), &my_set);
+        sched_setaffinity(0, sizeof(cpu_set_t), &my_set);
+        asm volatile("csrr %0, 0x800" : "=r" (hustatus) :: "memory");
+        sched_yield();
+    }
     printf("hustatus = %lx\n", hustatus);
 
     close_driver(IOCTL_DRIVER_NAME, fd_ioctl);

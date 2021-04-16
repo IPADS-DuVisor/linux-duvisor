@@ -66,6 +66,21 @@ extern bool has_fpu;
 extern struct task_struct *__switch_to(struct task_struct *,
 				       struct task_struct *);
 
+static inline void switch_ulh_data(void)
+{
+	struct ulh_data *cur_ud = (current->group_leader->ulh_data);
+    if (cur_ud) {
+        csr_write(CSR_SEDELEG, cur_ud->sedeleg);
+        csr_write(CSR_SIDELEG, cur_ud->sideleg);
+        if (cur_ud->uaccess_ok)
+            csr_set(CSR_HSTATUS, HSTATUS_HU);
+    } else {
+        csr_clear(CSR_HSTATUS, HSTATUS_HU);
+        csr_write(CSR_SEDELEG, 0);
+        csr_write(CSR_SIDELEG, 0);
+    }
+}
+
 #define switch_to(prev, next, last)			\
 do {							\
 	struct task_struct *__prev = (prev);		\
@@ -73,13 +88,7 @@ do {							\
 	if (has_fpu)					\
 		__switch_to_aux(__prev, __next);	\
 	((last) = __switch_to(__prev, __next));		\
-    if (__next->group_leader->ulh_data) { \
-        csr_write(CSR_SEDELEG, __next->group_leader->ulh_data->sedeleg); \
-        csr_write(CSR_SIDELEG, __next->group_leader->ulh_data->sideleg); \
-    } else { \
-        csr_write(CSR_SEDELEG, 0); \
-        csr_write(CSR_SIDELEG, 0); \
-    } \
+    switch_ulh_data(); \
 } while (0)
 
 #endif /* _ASM_RISCV_SWITCH_TO_H */
