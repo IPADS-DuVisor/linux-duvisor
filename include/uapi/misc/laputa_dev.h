@@ -13,5 +13,9 @@
     _IOW(LAPUTA_MAGIC, 2, unsigned long [2])
 #define IOCTL_LAPUTA_REQUEST_DELEG \
     _IOW(LAPUTA_MAGIC, 3, unsigned long [2])
+#define IOCTL_LAPUTA_REGISTER_VCPU \
+    _IO(LAPUTA_MAGIC, 4)
+#define IOCTL_LAPUTA_UNREGISTER_VCPU \
+    _IO(LAPUTA_MAGIC, 5)
 
 #endif

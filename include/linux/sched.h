@@ -649,6 +649,14 @@ struct task_struct {
 	/* -1 unrunnable, 0 runnable, >0 stopped: */
 	volatile long			state;
 
+    /* FIXME: We put ulh_data here to avoid invalid operands due to 
+     * exceeding instruction length limit (4 bytes), but this field
+     * may not be scheduling-critical item and should be placed in
+     * randomized_struct_fields below.
+     */
+    struct ulh_vm_data     *ulh_vm_data;
+    struct ulh_vcpu_data   *ulh_vcpu_data;
+
 	/*
 	 * This begins the randomizable portion of task_struct. Only
 	 * scheduling-critical items should be added above here.
@@ -1348,8 +1356,6 @@ struct task_struct {
 					__mce_reserved : 62;
 	struct callback_head		mce_kill_me;
 #endif
-
-    struct ulh_data     *ulh_data;
 
 	/*
 	 * New fields for task_struct should be added above here, so that
