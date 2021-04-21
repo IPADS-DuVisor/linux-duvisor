@@ -63,6 +63,75 @@ _save_context:
 	REG_S x30, PT_T5(sp)
 	REG_S x31, PT_T6(sp)
 
+        /* TODO: take care of SCOUNTEREN & HUCOUNTEREN */
+        /* BEGIN: Save HU, HUVS, U CSRs if is ULH */
+        csrrw s1, CSR_HSTATUS, x0
+        REG_S s1, PT_HSTATUS(sp)
+
+	REG_L s0, TASK_ULH_VCPU_DATA(tp)
+	beqz s0, _bypass_save_ulh
+        andi s1, s1, HSTATUS_SPV  /* SPV bit */
+	bnez s1, _save_ulh
+        csrr s0, CSR_SSTATUS
+        andi s0, s0, SR_SPP  /* SPP bit */
+	bnez s0, _bypass_save_ulh
+       
+_save_ulh:
+        csrr s0, CSR_HUSTATUS   
+        csrr s1, CSR_HUEDELEG   
+        csrr s2, CSR_HUIDELEG   
+        csrr s3, CSR_HUIE       
+        csrr s4, CSR_HUCOUNTEREN
+        csrr s5, CSR_HUTVAL     
+        csrr s6, CSR_HUVIP      
+        csrr s7, CSR_HUIP       
+        csrr s8, CSR_HUTINST    
+        csrr s9, CSR_HUGATP     
+        csrr s10, CSR_HUTIMEDELTA
+        REG_S s0, PT_HUSTATUS   (sp)
+        REG_S s1, PT_HUEDELEG   (sp)
+        REG_S s2, PT_HUIDELEG   (sp)
+        REG_S s3, PT_HUIE       (sp)
+        REG_S s4, PT_HUCOUNTEREN(sp)
+        REG_S s5, PT_HUTVAL     (sp)
+        REG_S s6, PT_HUVIP      (sp)
+        REG_S s7, PT_HUIP       (sp)
+        REG_S s8, PT_HUTINST    (sp)
+        REG_S s9, PT_HUGATP     (sp)
+        REG_S s10, PT_HUTIMEDELTA(sp)
+        
+        csrr s0, CSR_HUVSSTATUS 
+        csrr s1, CSR_HUVSIE     
+        csrr s2, CSR_HUVSTVEC   
+        csrr s3, CSR_HUVSSCRATCH
+        csrr s4, CSR_HUVSEPC    
+        csrr s5, CSR_HUVSCAUSE  
+        csrr s6, CSR_HUVSTVAL       
+        csrr s7, CSR_HUVSIP         
+        csrr s8, CSR_HUVSATP        
+        REG_S s0, PT_HUVSSTATUS (sp)
+        REG_S s1, PT_HUVSIE     (sp)
+        REG_S s2, PT_HUVSTVEC   (sp)
+        REG_S s3, PT_HUVSSCRATCH(sp)
+        REG_S s4, PT_HUVSEPC    (sp)
+        REG_S s5, PT_HUVSCAUSE  (sp)
+        REG_S s6, PT_HUVSTVAL   (sp)
+        REG_S s7, PT_HUVSIP     (sp)
+        REG_S s8, PT_HUVSATP    (sp)
+        
+        csrr s0, CSR_UTVEC
+        csrr s1, CSR_UEPC
+        csrr s2, CSR_USCRATCH
+        csrr s3, CSR_UCAUSE
+        csrr s4, CSR_UTVAL
+        REG_S s0, PT_UTVEC   (sp)
+        REG_S s1, PT_UEPC    (sp)
+        REG_S s2, PT_USCRATCH(sp)
+        REG_S s3, PT_UCAUSE  (sp)
+        REG_S s4, PT_UTVAL   (sp)
+_bypass_save_ulh:
+        /* END: Save HU, HUVS, U CSRs if is ULH */
+    
 	/*
 	 * Disable user-mode memory access as it should only be set in the
 	 * actual user copy routines.
@@ -224,6 +293,9 @@ ret_from_exception:
 #ifdef CONFIG_TRACE_IRQFLAGS
 	call trace_hardirqs_off
 #endif
+        REG_L s1, PT_HSTATUS(sp)
+        andi s1, s1, (1UL << 7)  /* SPV bit */
+	bnez s1, resume_userspace
 #ifdef CONFIG_RISCV_M_MODE
 	/* the MPP value is too large to be used as an immediate arg for addi */
 	li t0, SR_MPP
@@ -287,6 +359,74 @@ restore_all:
 
 	csrw CSR_STATUS, a0
 	csrw CSR_EPC, a2
+        
+        /* BEGIN: Restore HU, HUVS, U CSRs if is ULH */
+        REG_L s1, PT_HSTATUS(sp)
+        csrw CSR_HSTATUS, s1
+	
+        REG_L s0, TASK_ULH_VCPU_DATA(tp)
+        beqz s0, _bypass_restore_ulh
+        andi s1, s1, HSTATUS_SPV  /* SPV bit */
+	bnez s1, _restore_ulh
+        csrr s0, CSR_SSTATUS
+        andi s0, s0, SR_SPP  /* SPP bit */
+	bnez s0, _bypass_restore_ulh
+
+_restore_ulh:
+        REG_L s0, PT_HUSTATUS   (sp)
+        REG_L s1, PT_HUEDELEG   (sp)
+        REG_L s2, PT_HUIDELEG   (sp)
+        REG_L s3, PT_HUIE       (sp)
+        REG_L s4, PT_HUCOUNTEREN(sp)
+        REG_L s5, PT_HUTVAL     (sp)
+        REG_L s6, PT_HUVIP      (sp)
+        REG_L s7, PT_HUIP       (sp)
+        REG_L s8, PT_HUTINST    (sp)
+        REG_L s9, PT_HUGATP     (sp)
+        REG_L s10, PT_HUTIMEDELTA(sp)
+        csrw CSR_HUSTATUS   , s0 
+        csrw CSR_HUEDELEG   , s1 
+        csrw CSR_HUIDELEG   , s2 
+        csrw CSR_HUIE       , s3 
+        csrw CSR_HUCOUNTEREN, s4 
+        csrw CSR_HUTVAL     , s5 
+        csrw CSR_HUVIP      , s6 
+        csrw CSR_HUIP       , s7 
+        csrw CSR_HUTINST    , s8 
+        csrw CSR_HUGATP     , s9 
+        csrw CSR_HUTIMEDELTA, s10
+        
+        REG_L s0, PT_HUVSSTATUS (sp)
+        REG_L s1, PT_HUVSIE     (sp)
+        REG_L s2, PT_HUVSTVEC   (sp)
+        REG_L s3, PT_HUVSSCRATCH(sp)
+        REG_L s4, PT_HUVSEPC    (sp)
+        REG_L s5, PT_HUVSCAUSE  (sp)
+        REG_L s6, PT_HUVSTVAL   (sp)
+        REG_L s7, PT_HUVSIP     (sp)
+        REG_L s8, PT_HUVSATP    (sp)
+        csrw CSR_HUVSSTATUS , s0 
+        csrw CSR_HUVSIE     , s1 
+        csrw CSR_HUVSTVEC   , s2 
+        csrw CSR_HUVSSCRATCH, s3 
+        csrw CSR_HUVSEPC    , s4 
+        csrw CSR_HUVSCAUSE  , s5 
+        csrw CSR_HUVSTVAL   , s6     
+        csrw CSR_HUVSIP     , s7     
+        csrw CSR_HUVSATP    , s8     
+        
+        REG_L s0, PT_UTVEC   (sp)
+        REG_L s1, PT_UEPC    (sp)
+        REG_L s2, PT_USCRATCH(sp)
+        REG_L s3, PT_UCAUSE  (sp)
+        REG_L s4, PT_UTVAL   (sp)
+        csrw CSR_UTVEC   , s0 
+        csrw CSR_UEPC    , s1 
+        csrw CSR_USCRATCH, s2 
+        csrw CSR_UCAUSE  , s3 
+        csrw CSR_UTVAL   , s4 
+_bypass_restore_ulh:
+        /* END: Restore HU, HUVS, U CSRs if is ULH */
 
 	REG_L x1,  PT_RA(sp)
 	REG_L x3,  PT_GP(sp)
