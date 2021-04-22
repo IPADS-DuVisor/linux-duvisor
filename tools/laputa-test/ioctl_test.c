@@ -54,18 +54,35 @@ void close_driver(const char* driver_name, int fd_driver) {
 
 int pass_phys_mem(void) {
     int fd_ioctl = open_driver(IOCTL_DRIVER_NAME);
-    void *shared_mem;
+    void *vm_mem;
     size_t size = (2UL << 20);
+    unsigned long pfn;
 
     printf("phys_mem test for ULH\n");
-    shared_mem = mmap(NULL, size, 
+    vm_mem = mmap(NULL, size, 
             PROT_READ | PROT_WRITE, MAP_SHARED, fd_ioctl, 0);
-    printf("shared_mem uaddr = %p\n", shared_mem);
-    printf("shared_mem[0] = %x\n", ((int *)shared_mem)[0]);
-    printf("shared_mem[1] = %x\n", ((int *)shared_mem)[1]);
-    ((int *)shared_mem)[0] = 0x1234;
-    ((int *)shared_mem)[1] = 0x4567;
-    munmap(shared_mem, size);
+    if (vm_mem == MAP_FAILED) {
+        perror("MAP_FAILED");
+        return -1;
+    }
+
+    ((int *)vm_mem)[0] = 0xa001;
+    ((int *)vm_mem)[1] = 0xa001;
+
+    pfn = (unsigned long)vm_mem;
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_QUERY_PFN, &pfn) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_QUERY_PFN");
+        return -1;
+    }
+    printf("uaddr: %p, vm_mem[0] = %x, pfn: %lx\n", vm_mem, ((int *)vm_mem)[0], pfn);
+    
+    if (munmap(vm_mem, size) < 0)
+        perror("Unmap failed\n");
+
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_RELEASE_PFN, &pfn) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_RELEASE_PFN");
+        return -1;
+    }
 
     close_driver(IOCTL_DRIVER_NAME, fd_ioctl);
     return 0;
@@ -73,15 +90,29 @@ int pass_phys_mem(void) {
 
 int pass_huret(void) {
     unsigned long deleg_info[2];
-    unsigned long tmp_buf_pfn, hugatp;
+    void *test_buf;
+    unsigned long test_buf_pfn, hugatp, reg = 0;
+    size_t test_buf_size = (2UL << 20);
     int fd_ioctl = open_driver(IOCTL_DRIVER_NAME);
 
-    if (ioctl(fd_ioctl, IOCTL_LAPUTA_GET_API_VERSION, &tmp_buf_pfn) < 0) {
-        perror("Error ioctl IOCTL_LAPUTA_GET_API_VERSION");
+    test_buf = mmap(NULL, test_buf_size, 
+            PROT_READ | PROT_WRITE, MAP_SHARED, fd_ioctl, 0);
+    if (test_buf == MAP_FAILED) {
+        perror("MAP_FAILED");
         return -1;
     }
-    hugatp = tmp_buf_pfn | (8UL << 60);
-    printf("tmp_buf_pfn = %lx : %lx\n", tmp_buf_pfn, hugatp);
+
+    test_buf_pfn = (unsigned long)test_buf;
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_QUERY_PFN, &test_buf_pfn) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_QUERY_PFN");
+        return -1;
+    }
+    hugatp = test_buf_pfn | (8UL << 60);
+    printf("test_buf: %p, test_buf_pfn: %lx, hugatp: %lx\n", \
+            test_buf, test_buf_pfn, hugatp);
+
+    ((int *)test_buf)[0] = 0xa001;
+    ((int *)test_buf)[1] = 0xa001;
 
     deleg_info[0] = (1 << 20) | (1 << 21) | (1 << 23);
     deleg_info[1] = 1 << 0;
@@ -98,23 +129,23 @@ int pass_huret(void) {
     printf("uret test for ULH\n");
 
     asm volatile(
-            "li t0, 0x200000180\n\t" 
-            "csrw 0x800, t0\n\t" // hustatus
+            "li %0, 0x200000180\n\t" 
+            "csrw 0x800, %0\n\t" // hustatus
 
-            "la t0, 1f\n\t" 
-            "csrw 0x5, t0\n\t" // utvec
+            "la %0, 1f\n\t" 
+            "csrw 0x5, %0\n\t" // utvec
 
-            "csrw 0x41, %0\n\t" // uepc
+            "csrw 0x41, %1\n\t" // uepc
 
-            "csrw 0x880, %1\n\t" // hugatp
+            "csrw 0x880, %2\n\t" // hugatp
             
-            "li t0, 0x0\n\t"
-            "csrw 0x480, t0\n\t" // huvsatp
+            "li %0, 0x0\n\t"
+            "csrw 0x480, %0\n\t" // huvsatp
             
             ".word 0xE2000073\n\t" // hufence
             
 #if 0
-            "csrr t0, 0x41\n\t" // uepc
+            "csrr %0, 0x41\n\t" // uepc
             "la t1, 1f\n\t"
             "csrr t2, 0x800\n\t" // hustatus
             "_loop:\n\t"
@@ -123,14 +154,22 @@ int pass_huret(void) {
             "uret\n\t"
             "1:\n\t"
 #if 0
-            "csrr t0, 0x42\n\t" // ucause
+            "csrr %0, 0x42\n\t" // ucause
             "_tmp:\n\t"
             "j _tmp\n\t"
 #endif
-            :: "r"(tmp_buf_pfn << 12), "r"(hugatp) : "t0");
+            : "+r"(reg) : "r"(test_buf_pfn << 12), "r"(hugatp) : "memory");
 
     if (ioctl(fd_ioctl, IOCTL_LAPUTA_UNREGISTER_VCPU) < 0) {
         perror("Error ioctl IOCTL_LAPUTA_UNREGISTER_VCPU");
+        return -1;
+    }
+
+    if (munmap(test_buf, test_buf_size) < 0)
+        perror("Unmap failed\n");
+    
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_RELEASE_PFN, &test_buf_pfn) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_RELEASE_PFN");
         return -1;
     }
 
@@ -316,7 +355,6 @@ int main(void) {
     int times = 100;
     printf("SMP tests for %d times on 4 cores\n", times);
     
-#if 0
     for (int i = 0; i < times; i++) {
         cpu_set_t my_set;
         CPU_ZERO(&my_set);
@@ -371,14 +409,28 @@ int main(void) {
         CPU_SET((size_t)(i % 4), &my_set);
         sched_setaffinity(0, sizeof(cpu_set_t), &my_set);
     
+        if ((ret = pass_phys_mem()))
+            break;
+    }
+    if (ret) nr_fail++;
+    else nr_pass++;
+
+    for (int i = 0; i < times; i++) {
+        cpu_set_t my_set;
+        CPU_ZERO(&my_set);
+        CPU_SET((size_t)(i % 4), &my_set);
+        sched_setaffinity(0, sizeof(cpu_set_t), &my_set);
+    
         if ((ret = pass_huret()))
             break;
     }
     if (ret) nr_fail++;
     else nr_pass++;
-#endif
 
+#if 0
     pass_phys_mem();
+    pass_huret();
+#endif
     
     printf("\n ------------ \n");
     if (nr_fail)
