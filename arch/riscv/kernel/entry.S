@@ -68,10 +68,13 @@ _save_context:
         csrrw s1, CSR_HSTATUS, x0
         REG_S s1, PT_HSTATUS(sp)
 
+        /* If current is NOT vcpu thread, bypass saving */
 	REG_L s0, TASK_ULH_VCPU_DATA(tp)
 	beqz s0, _bypass_save_ulh
+        /* If trap is from V-mode vcpu, jump to save */
         andi s1, s1, HSTATUS_SPV  /* SPV bit */
 	bnez s1, _save_ulh
+        /* If trap is from HS-mode, bypass saving */
         csrr s0, CSR_SSTATUS
         andi s0, s0, SR_SPP  /* SPP bit */
 	bnez s0, _bypass_save_ulh
@@ -293,8 +296,12 @@ ret_from_exception:
 #ifdef CONFIG_TRACE_IRQFLAGS
 	call trace_hardirqs_off
 #endif
+        /* If the return target is V-mode, jump to resume_userspace.
+         * This branch is added because the original logic jumps to resume_kernel
+         * when it should sret to VS-mode. (Both HS & VS are S-mode)
+         */
         REG_L s1, PT_HSTATUS(sp)
-        andi s1, s1, (1UL << 7)  /* SPV bit */
+        andi s1, s1, HSTATUS_SPV  /* SPV bit */
 	bnez s1, resume_userspace
 #ifdef CONFIG_RISCV_M_MODE
 	/* the MPP value is too large to be used as an immediate arg for addi */
@@ -364,10 +371,13 @@ restore_all:
         REG_L s1, PT_HSTATUS(sp)
         csrw CSR_HSTATUS, s1
 	
+        /* If current is NOT vcpu thread, bypass restoring */
         REG_L s0, TASK_ULH_VCPU_DATA(tp)
         beqz s0, _bypass_restore_ulh
+        /* If target is V-mode, jump to restore */
         andi s1, s1, HSTATUS_SPV  /* SPV bit */
 	bnez s1, _restore_ulh
+        /* If target is HS-mode, bypass restoring */
         csrr s0, CSR_SSTATUS
         andi s0, s0, SR_SPP  /* SPP bit */
 	bnez s0, _bypass_restore_ulh
