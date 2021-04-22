@@ -68,14 +68,11 @@ extern struct task_struct *__switch_to(struct task_struct *,
 
 static inline void switch_ulh_data(void)
 {
-	struct ulh_data *cur_ud = (current->group_leader->ulh_data);
-    if (cur_ud) {
-        csr_write(CSR_SEDELEG, cur_ud->sedeleg);
-        csr_write(CSR_SIDELEG, cur_ud->sideleg);
-        if (cur_ud->uaccess_ok)
-            csr_set(CSR_HSTATUS, HSTATUS_HU);
+	struct ulh_vm_data *cur_vm_dat = (current->group_leader->ulh_vm_data);
+    if (cur_vm_dat) {
+        csr_write(CSR_SEDELEG, cur_vm_dat->sedeleg);
+        csr_write(CSR_SIDELEG, cur_vm_dat->sideleg);
     } else {
-        csr_clear(CSR_HSTATUS, HSTATUS_HU);
         csr_write(CSR_SEDELEG, 0);
         csr_write(CSR_SIDELEG, 0);
     }
