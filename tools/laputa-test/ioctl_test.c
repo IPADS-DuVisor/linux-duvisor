@@ -185,13 +185,13 @@ int pass_csrs(void) {
     assert(val == after);
 
     /* HUIP should reflect the value of HUVIP */
-    after = (1 << IRQ_U_TIMER);
+    after = (1 << IRQ_U_SOFT);
     before = csr_swap(CSR_HUIP, after);
     assert(before == 0);
     val = csr_swap(CSR_HUIP, 0);
     assert(val == after);
 
-    after = (1 << IRQ_U_TIMER);
+    after = (1 << IRQ_U_SOFT);
     before = csr_swap(CSR_HUIE, after);
     assert(before == 0);
     val = csr_swap(CSR_HUIE, 0);
