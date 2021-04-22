@@ -17,5 +17,9 @@
     _IO(LAPUTA_MAGIC, 4)
 #define IOCTL_LAPUTA_UNREGISTER_VCPU \
     _IO(LAPUTA_MAGIC, 5)
+#define IOCTL_LAPUTA_QUERY_PFN \
+    _IOWR(LAPUTA_MAGIC, 6, unsigned long)
+#define IOCTL_LAPUTA_RELEASE_PFN \
+    _IOW(LAPUTA_MAGIC, 7, unsigned long)
 
 #endif

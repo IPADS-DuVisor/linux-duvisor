@@ -52,6 +52,25 @@ void close_driver(const char* driver_name, int fd_driver) {
     }
 }
 
+int pass_phys_mem(void) {
+    int fd_ioctl = open_driver(IOCTL_DRIVER_NAME);
+    void *shared_mem;
+    size_t size = (2UL << 20);
+
+    printf("phys_mem test for ULH\n");
+    shared_mem = mmap(NULL, size, 
+            PROT_READ | PROT_WRITE, MAP_SHARED, fd_ioctl, 0);
+    printf("shared_mem uaddr = %p\n", shared_mem);
+    printf("shared_mem[0] = %x\n", ((int *)shared_mem)[0]);
+    printf("shared_mem[1] = %x\n", ((int *)shared_mem)[1]);
+    ((int *)shared_mem)[0] = 0x1234;
+    ((int *)shared_mem)[1] = 0x4567;
+    munmap(shared_mem, size);
+
+    close_driver(IOCTL_DRIVER_NAME, fd_ioctl);
+    return 0;
+}
+
 int pass_huret(void) {
     unsigned long deleg_info[2];
     unsigned long tmp_buf_pfn, hugatp;
@@ -297,6 +316,7 @@ int main(void) {
     int times = 100;
     printf("SMP tests for %d times on 4 cores\n", times);
     
+#if 0
     for (int i = 0; i < times; i++) {
         cpu_set_t my_set;
         CPU_ZERO(&my_set);
@@ -356,6 +376,9 @@ int main(void) {
     }
     if (ret) nr_fail++;
     else nr_pass++;
+#endif
+
+    pass_phys_mem();
     
     printf("\n ------------ \n");
     if (nr_fail)
