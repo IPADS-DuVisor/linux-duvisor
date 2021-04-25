@@ -6,6 +6,7 @@
 #include <linux/slab.h>
 #include <linux/sched/task_stack.h>
 #include <linux/miscdevice.h>
+#include <linux/dma-map-ops.h>
 #include <uapi/misc/laputa_dev.h>
 
 #include <asm/ulh.h>
@@ -13,9 +14,12 @@
 #include <asm/hwcap.h>
 #include <asm/processor.h>
 
+static struct miscdevice laputa_miscdev;
+
 static int laputa_dev_mmap(struct file *file, struct vm_area_struct *vma)
 {
     size_t size = vma->vm_end - vma->vm_start;
+    struct page *cma_pages = NULL;
     void *mem = NULL;
     struct ulh_vm_data *vm_dat = current->group_leader->ulh_vm_data;
     struct ulh_vm_mem *mem_info = NULL;
@@ -25,14 +29,16 @@ static int laputa_dev_mmap(struct file *file, struct vm_area_struct *vma)
 
     /* TODO: check the size of mmap */
 
-    if (!(mem = kzalloc(size, GFP_KERNEL))) {
+    if (!(cma_pages = dma_alloc_contiguous(laputa_miscdev.this_device, 
+                    size, GFP_KERNEL))) {
         return -ENOMEM;
     }
+    mem = page_to_virt(cma_pages);
     
     if (remap_pfn_range(vma, vma->vm_start,
                 virt_to_pfn(mem),
                 size, vma->vm_page_prot)) {
-        kfree(mem);
+        dma_free_contiguous(laputa_miscdev.this_device, cma_pages, size);
         return -EAGAIN;
     }
 
@@ -243,7 +249,8 @@ static long laputa_dev_ioctl(struct file *file,
                     list_del(&mem_info->mem_node);
                     mutex_unlock(&vm_dat->mem_lock);
 
-                    kfree(mem_info->kaddr);
+                    dma_free_contiguous(laputa_miscdev.this_device, 
+                            virt_to_page(mem_info->kaddr), mem_info->size);
                     kfree(mem_info);
                     break;
                 }
@@ -298,7 +305,8 @@ static int laputa_dev_release(struct inode *inode, struct file *filep)
 
     list_for_each_entry_safe(mem_info, tmp, &vm_dat->mem_list, mem_node) {
         list_del(&mem_info->mem_node);
-        kfree(mem_info->kaddr);
+        dma_free_contiguous(laputa_miscdev.this_device, 
+                virt_to_page(mem_info->kaddr), mem_info->size);
         kfree(mem_info);
     }
     kfree(vm_dat);
