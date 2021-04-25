@@ -55,7 +55,7 @@ void close_driver(const char* driver_name, int fd_driver) {
 int pass_phys_mem(void) {
     int fd_ioctl = open_driver(IOCTL_DRIVER_NAME);
     void *vm_mem;
-    size_t size = (2UL << 20);
+    size_t size = (32UL << 20);
     unsigned long pfn;
 
     printf("phys_mem test for ULH\n");
