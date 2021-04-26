@@ -72,9 +72,13 @@ static inline void switch_ulh_data(void)
     if (cur_vm_dat) {
         csr_write(CSR_SEDELEG, cur_vm_dat->sedeleg);
         csr_write(CSR_SIDELEG, cur_vm_dat->sideleg);
+        csr_write(CSR_HEDELEG, cur_vm_dat->hedeleg);
+        csr_write(CSR_HIDELEG, cur_vm_dat->hideleg);
     } else {
         csr_write(CSR_SEDELEG, 0);
         csr_write(CSR_SIDELEG, 0);
+        csr_write(CSR_HEDELEG, 0);
+        csr_write(CSR_HIDELEG, 0);
     }
 }
 
