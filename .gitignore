@@ -96,6 +96,11 @@ modules.order
 !.mailmap
 
 #
+# Sync .config
+#
+!.config
+
+#
 # Generated include files
 #
 /include/config/
