@@ -66,15 +66,23 @@ extern bool has_fpu;
 extern struct task_struct *__switch_to(struct task_struct *,
 				       struct task_struct *);
 
-static inline void switch_ulh_data(void)
+/* NOTE: an exception from kthread will jump to finish_task_switch
+ * directly after __switch_to, rather than return to context_switch.
+ * Therefore, we must put switch_ulh_data before __switch_to.
+ */
+static inline void switch_ulh_data(struct task_struct *next)
 {
-	struct ulh_vm_data *cur_vm_dat = (current->group_leader->ulh_vm_data);
-    if (cur_vm_dat) {
-        csr_write(CSR_SEDELEG, cur_vm_dat->sedeleg);
-        csr_write(CSR_SIDELEG, cur_vm_dat->sideleg);
+	struct ulh_vm_data *vm_dat = (next->group_leader->ulh_vm_data);
+    if (vm_dat) {
+        csr_write(CSR_SEDELEG, vm_dat->sedeleg);
+        csr_write(CSR_SIDELEG, vm_dat->sideleg);
+        csr_write(CSR_HEDELEG, vm_dat->hedeleg);
+        csr_write(CSR_HIDELEG, vm_dat->hideleg);
     } else {
         csr_write(CSR_SEDELEG, 0);
         csr_write(CSR_SIDELEG, 0);
+        csr_write(CSR_HEDELEG, 0);
+        csr_write(CSR_HIDELEG, 0);
     }
 }
 
@@ -84,8 +92,8 @@ do {							\
 	struct task_struct *__next = (next);		\
 	if (has_fpu)					\
 		__switch_to_aux(__prev, __next);	\
+    switch_ulh_data(__next); \
 	((last) = __switch_to(__prev, __next));		\
-    switch_ulh_data(); \
 } while (0)
 
 #endif /* _ASM_RISCV_SWITCH_TO_H */
