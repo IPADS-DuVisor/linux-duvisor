@@ -18,7 +18,7 @@
 
 #define IOCTL_DRIVER_NAME "/dev/laputa_dev"
             
-static const unsigned long e_mask = (1UL << EXC_SUPERVISOR_ECALL) | 
+static const unsigned long e_mask = (1UL << EXC_VS_ECALL) | 
     (1UL << EXC_INST_GUEST_PAGE_FAULT) | 
     (1UL << EXC_LOAD_GUEST_PAGE_FAULT) | 
     (1UL << EXC_VIRT_INST) | 
@@ -26,7 +26,8 @@ static const unsigned long e_mask = (1UL << EXC_SUPERVISOR_ECALL) |
 
 static const unsigned long i_mask = (1UL << IRQ_U_SOFT) | 
     (1UL << IRQ_U_TIMER) | 
-    (1UL << IRQ_U_EXT);
+    (1UL << IRQ_U_EXT) |
+    (1UL << IRQ_U_VTIMER);
 
 int open_driver(const char* driver_name) {
     printf("* Open Driver\n");
@@ -88,6 +89,9 @@ int pass_phys_mem(void) {
     return 0;
 }
 
+
+extern void infinite_loop();
+
 int pass_huret(void) {
     unsigned long deleg_info[2];
     void *test_buf;
@@ -111,8 +115,7 @@ int pass_huret(void) {
     printf("test_buf: %p, test_buf_pfn: %lx, hugatp: %lx\n", \
             test_buf, test_buf_pfn, hugatp);
 
-    ((int *)test_buf)[0] = 0xa001;
-    ((int *)test_buf)[1] = 0xa001;
+    memcpy(test_buf, (void *)infinite_loop, 0x1000);
 
     deleg_info[0] = (1 << 20) | (1 << 21) | (1 << 23);
     deleg_info[1] = 1 << 0;
@@ -152,6 +155,7 @@ int pass_huret(void) {
             "j _loop\n\t"
 #endif
             "uret\n\t"
+            ".align 2 \n\t"
             "1:\n\t"
 #if 0
             "csrr %0, 0x42\n\t" // ucause
@@ -175,6 +179,153 @@ int pass_huret(void) {
 
     close_driver(IOCTL_DRIVER_NAME, fd_ioctl);
     return 0;
+}
+
+int pass_vtimer_trap_ulh(void) {
+    printf("vtimer test start\n");
+    unsigned long deleg_info[2];
+    unsigned long ncycles = 10000000;
+    int fd_ioctl = open_driver(IOCTL_DRIVER_NAME);
+
+    deleg_info[0] = (1 << 20) | (1 << 21) | (1 << 23);
+    deleg_info[1] = 1 << IRQ_U_VTIMER;
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_REQUEST_DELEG, deleg_info) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_REQUEST_DELEG");
+        return -1;
+    }
+
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_REGISTER_VCPU) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_REGISTER_VCPU");
+        return -1;
+    }
+
+    // disable HU interrupt
+    csr_clear(CSR_HUSTATUS, 0x1);
+    csr_write(CSR_VTIMECTL, 0x1 | (IRQ_U_VTIMER << 1));
+    csr_write(CSR_VTIMECMP, ncycles);
+
+    while((csr_read(CSR_HUIP) & (1UL << IRQ_U_VTIMER)) == 0);
+
+    // disable timer
+    csr_write(CSR_VTIMECTL, 0);
+    // clear pending bit
+    csr_clear(CSR_HUIP, 1UL << IRQ_U_VTIMER);
+    printf("vtimer test for ULH (NOT VM) passed\n");
+
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_UNREGISTER_VCPU) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_UNREGISTER_VCPU");
+        return -1;
+    }
+
+    close_driver(IOCTL_DRIVER_NAME, fd_ioctl);
+    return 0;
+
+}
+
+
+extern void loop_until_sip();
+
+int pass_vtimer_trap_vm(void) {
+    printf("vtimer test for vm start\n");
+    unsigned long deleg_info[2];
+    unsigned long ncycles = 20000000;
+    unsigned long vtimectl = 0x21;
+    unsigned long ucause;
+    void *test_buf;
+    unsigned long test_buf_pfn, hugatp = 0, reg = 0;
+    size_t test_buf_size = (2UL << 20);
+    int fd_ioctl = open_driver(IOCTL_DRIVER_NAME);
+
+    test_buf = mmap(NULL, test_buf_size, 
+            PROT_READ | PROT_WRITE, MAP_SHARED, fd_ioctl, 0);
+    if (test_buf == MAP_FAILED) {
+        perror("MAP_FAILED");
+        return -1;
+    }
+
+    test_buf_pfn = (unsigned long)test_buf;
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_QUERY_PFN, &test_buf_pfn) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_QUERY_PFN");
+        return -1;
+    }
+
+    printf("test_buf: %p, test_buf_pfn: %lx, hugatp: %lx\n", \
+            test_buf, test_buf_pfn, hugatp);
+
+    memcpy(test_buf, (void *)loop_until_sip, 0x1000);
+
+    deleg_info[0] = (1 << 20) | (1 << 21) | (1 << 23) | (1 << EXC_VS_ECALL);
+    deleg_info[1] = 1 << IRQ_U_VTIMER;
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_REQUEST_DELEG, deleg_info) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_REQUEST_DELEG");
+        return -1;
+    }
+
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_REGISTER_VCPU) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_REGISTER_VCPU");
+        return -1;
+    }
+
+    csr_write(CSR_HUIE, 1 << 0x10);
+
+    // enable HU interrupt
+    csr_set(CSR_HUSTATUS, 0x1);
+
+    printf("vtimer test, interrupt from vm\n");
+
+    asm volatile(
+            "li %0, 0x200000180\n\t" 
+            "csrw 0x800, %0\n\t" // hustatus
+
+            "la %0, 1f\n\t" 
+            "csrw 0x5, %0\n\t" // utvec
+
+            "csrw 0x41, %1\n\t" // uepc
+
+            "csrw 0x880, %2\n\t" // hugatp
+            
+            "li %0, 0x0\n\t"
+            "csrw 0x480, %0\n\t" // huvsatp
+            
+            ".word 0xE2000073\n\t" // hufence
+
+            "csrw 0x402, %3\n\t"      // vtimectl
+            "csrw 0x401, %4\n\t" // vtimecmp
+            "uret\n\t"
+            ".align 2 \n\t"
+            "1:\n\t"
+            
+            : "+r"(reg) : "r"(test_buf_pfn << 12), "r"(hugatp), "r"(vtimectl), "r"(ncycles) : "memory");
+
+    ucause = csr_read(CSR_UCAUSE);
+
+    // disable timer
+    csr_write(CSR_VTIMECTL, 0);
+    // clear pending bit
+    csr_clear(CSR_HUIP, 1UL << IRQ_U_VTIMER);
+
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_UNREGISTER_VCPU) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_UNREGISTER_VCPU");
+        return -1;
+    }
+
+    if (munmap(test_buf, test_buf_size) < 0)
+        perror("Unmap failed\n");
+    
+    if (ioctl(fd_ioctl, IOCTL_LAPUTA_RELEASE_PFN, &test_buf_pfn) < 0) {
+        perror("Error ioctl IOCTL_LAPUTA_RELEASE_PFN");
+        return -1;
+    }
+
+    close_driver(IOCTL_DRIVER_NAME, fd_ioctl);
+    if(ucause == 0x8000000000000010){
+        printf("vtimer test for VM passed\n");
+        return 0;
+    } else {
+        printf("vtimer test for VM failed\n");
+        return -1;
+    }
+
 }
 
 int pass_ioctls(void) {
@@ -238,6 +389,7 @@ int pass_csrs(void) {
 
     after = (1 << IRQ_VS_SOFT);
     before = csr_swap(CSR_HUVIP, after);
+    printf("before 0x%lx\n", before);
     assert(before == 0);
     val = csr_swap(CSR_HUVIP, 0);
     assert(val == after);
@@ -322,7 +474,7 @@ int fail_ideleg(void) {
     int fd_ioctl = open_driver(IOCTL_DRIVER_NAME);
     
     unsigned long deleg_info[2];
-    deleg_info[0] = 1 << EXC_SUPERVISOR_ECALL;
+    deleg_info[0] = 1 << EXC_VS_ECALL;
     deleg_info[1] = 1 << IRQ_S_SOFT;
     if (ioctl(fd_ioctl, IOCTL_LAPUTA_REQUEST_DELEG, deleg_info) < 0) {
         perror("Error ioctl IOCTL_LAPUTA_REQUEST_DELEG");
@@ -422,6 +574,30 @@ int main(void) {
         sched_setaffinity(0, sizeof(cpu_set_t), &my_set);
     
         if ((ret = pass_huret()))
+            break;
+    }
+    if (ret) nr_fail++;
+    else nr_pass++;
+
+    for (int i = 0; i < 4; i++) {
+        cpu_set_t my_set;
+        CPU_ZERO(&my_set);
+        CPU_SET((size_t)(i % 4), &my_set);
+        sched_setaffinity(0, sizeof(cpu_set_t), &my_set);
+    
+        if ((ret = pass_vtimer_trap_vm()))
+            break;
+    }
+    if (ret) nr_fail++;
+    else nr_pass++;
+
+    for (int i = 0; i < 4; i++) {
+        cpu_set_t my_set;
+        CPU_ZERO(&my_set);
+        CPU_SET((size_t)(i % 4), &my_set);
+        sched_setaffinity(0, sizeof(cpu_set_t), &my_set);
+    
+        if ((ret = pass_vtimer_trap_ulh()))
             break;
     }
     if (ret) nr_fail++;

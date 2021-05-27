@@ -126,7 +126,8 @@ static long laputa_dev_ioctl(struct file *file,
 
             i_mask = (1UL << IRQ_U_SOFT)
                 | (1UL << IRQ_U_TIMER)
-                | (1UL << IRQ_U_EXT);
+                | (1UL << IRQ_U_EXT)
+                | (1UL << IRQ_U_VTIMER);
 
             if (deleg_info[0] & ~e_mask) {
                 pr_err("%s:%d invalid exception delegation: %lx\n", 
