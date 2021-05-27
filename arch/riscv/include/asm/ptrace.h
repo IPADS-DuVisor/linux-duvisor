@@ -68,6 +68,9 @@ struct pt_regs {
     unsigned long huvstval;
     unsigned long huvsip;
     unsigned long huvsatp;
+	/* vtime CSRs*/
+    unsigned long vtimecmp;
+    unsigned int vtimectl;
 	/* U CSRs */
     unsigned long utvec;
     unsigned long uepc;

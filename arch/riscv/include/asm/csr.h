@@ -63,7 +63,7 @@
 #define IRQ_S_EXT		9
 #define IRQ_VS_EXT		10
 #define IRQ_M_EXT		11
-
+#define IRQ_U_VTIMER	        16
 /* Exception causes */
 #define EXC_INST_MISALIGNED	0
 #define EXC_INST_ACCESS		1
@@ -194,6 +194,11 @@
 #define CSR_HUVSTVAL          MAP_RW_H_TO_HUVS(CSR_VSTVAL)
 #define CSR_HUVSIP            MAP_RW_H_TO_HUVS(CSR_VSIP)
 #define CSR_HUVSATP           MAP_RW_H_TO_HUVS(CSR_VSATP)
+
+#define CSR_VTIMECMP           0x401
+#define CSR_VTIMECTL           0x402
+#define CSR_VTIMECMPH          0x481
+
 /* HU CSRs END */
 
 #define CSR_MSTATUS		0x300

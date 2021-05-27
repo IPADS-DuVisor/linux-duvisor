@@ -23,7 +23,8 @@ struct ulh_vm_data {
     struct list_head mem_list;
 };
 
-/* TODO: move HU, HUVS, U CSRs from pt_regs to ulh_vcpu_data */
-struct ulh_vcpu_data {};
+/* TODO: move HU, HUVS, U CSRs, vtime CSRs from pt_regs to ulh_vcpu_data */
+struct ulh_vcpu_data {
+};
 
 #endif /* _ULH_H_ */

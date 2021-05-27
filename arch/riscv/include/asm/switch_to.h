@@ -79,6 +79,10 @@ static inline void switch_ulh_data(struct task_struct *next)
         csr_write(CSR_HEDELEG, vm_dat->hedeleg);
         csr_write(CSR_HIDELEG, vm_dat->hideleg);
     } else {
+		/* cancel timer and then clear huip for non-vcpu thread*/
+		csr_write(CSR_VTIMECTL, 0);
+		csr_write(CSR_HUIP, 0);
+
         csr_write(CSR_SEDELEG, 0);
         csr_write(CSR_SIDELEG, 0);
         csr_write(CSR_HEDELEG, 0);

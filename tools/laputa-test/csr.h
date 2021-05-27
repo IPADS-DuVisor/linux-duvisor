@@ -17,6 +17,7 @@
 #define IRQ_S_EXT		9
 #define IRQ_VS_EXT		10
 #define IRQ_M_EXT		11
+#define IRQ_U_VTIMER	16
 
 /* Exception causes */
 #define EXC_INST_MISALIGNED	0
@@ -28,7 +29,8 @@
 #define EXC_STORE_ADDR_MISALIGNED	6
 #define EXC_STORE_ACCESS	7
 #define EXC_SYSCALL		8
-#define EXC_SUPERVISOR_ECALL	10
+#define EXC_HS_ECALL	9
+#define EXC_VS_ECALL	10
 #define EXC_INST_PAGE_FAULT	12
 #define EXC_LOAD_PAGE_FAULT	13
 #define EXC_STORE_PAGE_FAULT	15
@@ -105,6 +107,10 @@
 #define CSR_HUVSTVAL          MAP_RW_H_TO_HUVS(CSR_VSTVAL)
 #define CSR_HUVSIP            MAP_RW_H_TO_HUVS(CSR_VSIP)
 #define CSR_HUVSATP           MAP_RW_H_TO_HUVS(CSR_VSATP)
+
+#define CSR_VTIMECMP           0x401
+#define CSR_VTIMECTL           0x402
+#define CSR_VTIMECMPH          0x481
 /* HU CSRs END */
 
 #ifndef __ASSEMBLY__

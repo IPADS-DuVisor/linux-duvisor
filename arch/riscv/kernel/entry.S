@@ -127,11 +127,15 @@ _save_ulh:
         csrr s2, CSR_USCRATCH
         csrr s3, CSR_UCAUSE
         csrr s4, CSR_UTVAL
+	csrr s5, CSR_VTIMECTL
+	csrr s6, CSR_VTIMECMP
         REG_S s0, PT_UTVEC   (sp)
         REG_S s1, PT_UEPC    (sp)
         REG_S s2, PT_USCRATCH(sp)
         REG_S s3, PT_UCAUSE  (sp)
         REG_S s4, PT_UTVAL   (sp)
+	REG_S s5, PT_VTIMECTL(sp)
+	REG_S s6, PT_VTIMECMP(sp)
 _bypass_save_ulh:
         /* END: Save HU, HUVS, U CSRs if is ULH */
     
@@ -430,11 +434,15 @@ _restore_ulh:
         REG_L s2, PT_USCRATCH(sp)
         REG_L s3, PT_UCAUSE  (sp)
         REG_L s4, PT_UTVAL   (sp)
+        REG_L s5, PT_VTIMECTL(sp)
+        REG_L s6, PT_VTIMECMP(sp)
         csrw CSR_UTVEC   , s0 
         csrw CSR_UEPC    , s1 
         csrw CSR_USCRATCH, s2 
         csrw CSR_UCAUSE  , s3 
         csrw CSR_UTVAL   , s4 
+	csrw CSR_VTIMECTL, s5
+	csrw CSR_VTIMECMP, s6
 _bypass_restore_ulh:
         /* END: Restore HU, HUVS, U CSRs if is ULH */
 
