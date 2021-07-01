@@ -13,6 +13,7 @@
 #include <asm/csr.h>
 #include <asm/hwcap.h>
 #include <asm/processor.h>
+#include <asm/sbi.h>
 
 static struct miscdevice laputa_miscdev;
 
@@ -101,6 +102,19 @@ static long laputa_dev_ioctl(struct file *file,
             break;
         }
 
+        case IOCTL_REMOTE_FENCE: {
+            struct sbiret ret = sbi_ecall(5, 0, 0, 0, 0, 0, 0, 0);
+
+            unsigned long ecall_ret[2];
+            ecall_ret[0] = ret.error;
+            ecall_ret[1] = ret.value;
+
+            if (copy_to_user((unsigned long *)uarg, &ecall_ret, sizeof(ecall_ret)))
+                break;
+
+            break;
+        }
+
         case IOCTL_LAPUTA_REQUEST_DELEG: {
             /* [0] e-deleg [1] i-deleg */
             unsigned long deleg_info[2];
@@ -161,6 +175,11 @@ static long laputa_dev_ioctl(struct file *file,
             csr_write(CSR_HIDELEG, vm_dat->hideleg);
 
             rc = 0;
+
+            /* set up scounteren */
+            vm_dat->scounteren = 0xffffffff;
+            csr_write(CSR_SCOUNTEREN, vm_dat->scounteren);
+            
             break;
         }
 

@@ -21,4 +21,6 @@
     _IOWR(LAPUTA_MAGIC, 6, unsigned long)
 #define IOCTL_LAPUTA_RELEASE_PFN \
     _IOW(LAPUTA_MAGIC, 7, unsigned long)
+#define IOCTL_REMOTE_FENCE \
+    _IOR(LAPUTA_MAGIC, 8, unsigned long [2])
 #endif

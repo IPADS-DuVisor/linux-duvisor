@@ -19,6 +19,7 @@ struct ulh_vm_data {
     unsigned long sideleg;
     unsigned long hedeleg;
     unsigned long hideleg;
+    unsigned long scounteren;
     struct mutex mem_lock;
     struct list_head mem_list;
 };
