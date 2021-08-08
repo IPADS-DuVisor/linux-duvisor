@@ -82,10 +82,10 @@ static inline void switch_ulh_data(struct task_struct *next)
     } else {
 		/* cancel timer and then clear huip for non-vcpu thread*/
 		csr_write(CSR_VTIMECTL, 0);
-		csr_write(CSR_HUIP, 0);
+        csr_write(CSR_HUIE, 0);
 
         csr_write(CSR_SEDELEG, 0);
-        csr_write(CSR_SIDELEG, 0);
+        csr_write(CSR_SIDELEG, (1 << IRQ_U_SOFT));
         csr_write(CSR_HEDELEG, 0);
         csr_write(CSR_HIDELEG, 0);
     }
