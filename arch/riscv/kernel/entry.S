@@ -65,7 +65,12 @@ _save_context:
 
         /* TODO: take care of SCOUNTEREN & HUCOUNTEREN */
         /* BEGIN: Save HU, HUVS, U CSRs if is ULH */
+#ifdef CONFIG_ULH_QEMU
         csrrw s1, CSR_HSTATUS, x0
+#endif
+#ifdef CONFIG_ULH_FPGA
+		csrr s1, CSR_HSTATUS
+#endif
         REG_S s1, PT_HSTATUS(sp)
 
         /* If current is NOT vcpu thread, bypass saving */
@@ -81,25 +86,19 @@ _save_context:
        
 _save_ulh:
         csrr s0, CSR_HUSTATUS   
-        csrr s1, CSR_HUEDELEG   
-        csrr s2, CSR_HUIDELEG   
         csrr s3, CSR_HUIE       
         csrr s4, CSR_HUCOUNTEREN
         csrr s5, CSR_HUTVAL     
         csrr s6, CSR_HUVIP      
         csrr s7, CSR_HUIP       
-        csrr s8, CSR_HUTINST    
         csrr s9, CSR_HUGATP     
         csrr s10, CSR_HUTIMEDELTA
         REG_S s0, PT_HUSTATUS   (sp)
-        REG_S s1, PT_HUEDELEG   (sp)
-        REG_S s2, PT_HUIDELEG   (sp)
         REG_S s3, PT_HUIE       (sp)
         REG_S s4, PT_HUCOUNTEREN(sp)
         REG_S s5, PT_HUTVAL     (sp)
         REG_S s6, PT_HUVIP      (sp)
         REG_S s7, PT_HUIP       (sp)
-        REG_S s8, PT_HUTINST    (sp)
         REG_S s9, PT_HUGATP     (sp)
         REG_S s10, PT_HUTIMEDELTA(sp)
         
@@ -127,15 +126,32 @@ _save_ulh:
         csrr s2, CSR_USCRATCH
         csrr s3, CSR_UCAUSE
         csrr s4, CSR_UTVAL
-	csrr s5, CSR_VTIMECTL
-	csrr s6, CSR_VTIMECMP
+   		
+#ifdef CONFIG_ULH_QEMU
+        csrr s5, CSR_VTIMECTL
+   		csrr s6, CSR_VTIMECMP
+#endif
+#ifdef CONFIG_ULH_FPGA
+        .word 0xf0202af7
+		.word 0xe0102b73
+#endif
+
+#ifdef CONFIG_ULH_QEMU
+       	csrr s7, CSR_VCPUID
+       	REG_S s7, PT_VCPUID(sp)
+#endif
+#ifdef CONFIG_ULH_FPGA
+       	.word 0xf8102bf7
+       	REG_S s7, PT_VCPUID(sp)
+#endif
+
         REG_S s0, PT_UTVEC   (sp)
         REG_S s1, PT_UEPC    (sp)
         REG_S s2, PT_USCRATCH(sp)
         REG_S s3, PT_UCAUSE  (sp)
         REG_S s4, PT_UTVAL   (sp)
-	REG_S s5, PT_VTIMECTL(sp)
-	REG_S s6, PT_VTIMECMP(sp)
+		REG_S s5, PT_VTIMECTL(sp)
+		REG_S s6, PT_VTIMECMP(sp)
 _bypass_save_ulh:
         /* END: Save HU, HUVS, U CSRs if is ULH */
     
@@ -323,7 +339,9 @@ resume_userspace:
 	bnez s1, work_pending
 
 #ifdef CONFIG_CONTEXT_TRACKING
+#ifdef CONFIG_ULH_QEMU
 	call context_tracking_user_enter
+#endif
 #endif
 
 	/* Save unwound kernel stack pointer in thread_info */
@@ -388,25 +406,19 @@ restore_all:
 
 _restore_ulh:
         REG_L s0, PT_HUSTATUS   (sp)
-        REG_L s1, PT_HUEDELEG   (sp)
-        REG_L s2, PT_HUIDELEG   (sp)
         REG_L s3, PT_HUIE       (sp)
         REG_L s4, PT_HUCOUNTEREN(sp)
         REG_L s5, PT_HUTVAL     (sp)
         REG_L s6, PT_HUVIP      (sp)
         REG_L s7, PT_HUIP       (sp)
-        REG_L s8, PT_HUTINST    (sp)
         REG_L s9, PT_HUGATP     (sp)
         REG_L s10, PT_HUTIMEDELTA(sp)
         csrw CSR_HUSTATUS   , s0 
-        csrw CSR_HUEDELEG   , s1 
-        csrw CSR_HUIDELEG   , s2 
         csrw CSR_HUIE       , s3 
         csrw CSR_HUCOUNTEREN, s4 
         csrw CSR_HUTVAL     , s5 
         csrw CSR_HUVIP      , s6 
         csrw CSR_HUIP       , s7 
-        csrw CSR_HUTINST    , s8 
         csrw CSR_HUGATP     , s9 
         csrw CSR_HUTIMEDELTA, s10
         
@@ -436,13 +448,29 @@ _restore_ulh:
         REG_L s4, PT_UTVAL   (sp)
         REG_L s5, PT_VTIMECTL(sp)
         REG_L s6, PT_VTIMECMP(sp)
+
+#ifdef CONFIG_ULH_QEMU
+       	REG_L s7, PT_VCPUID(sp)
+       	csrw CSR_VCPUID, s7
+#endif
+#ifdef CONFIG_ULH_FPGA
+       	REG_L s7, PT_VCPUID(sp)
+       	.word 0xf9701077
+#endif
+
         csrw CSR_UTVEC   , s0 
         csrw CSR_UEPC    , s1 
         csrw CSR_USCRATCH, s2 
         csrw CSR_UCAUSE  , s3 
         csrw CSR_UTVAL   , s4 
-	csrw CSR_VTIMECTL, s5
-	csrw CSR_VTIMECMP, s6
+#ifdef CONFIG_ULH_QEMU
+		csrw CSR_VTIMECTL, s5
+		csrw CSR_VTIMECMP, s6
+#endif
+#ifdef CONFIG_ULH_FPGA
+		.word 0xf1501077
+		.word 0xe1601077
+#endif
 _bypass_restore_ulh:
         /* END: Restore HU, HUVS, U CSRs if is ULH */
 

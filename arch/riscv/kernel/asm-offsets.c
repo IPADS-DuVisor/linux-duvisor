@@ -112,14 +112,11 @@ void asm_offsets(void)
     OFFSET(PT_HSTATUS, pt_regs, hstatus);
 	/* HU CSRs */
     OFFSET(PT_HUSTATUS, pt_regs, hustatus);
-    OFFSET(PT_HUEDELEG, pt_regs, huedeleg);
-    OFFSET(PT_HUIDELEG, pt_regs, huideleg);
     OFFSET(PT_HUIE, pt_regs, huie);
     OFFSET(PT_HUCOUNTEREN, pt_regs, hucounteren); 
     OFFSET(PT_HUTVAL, pt_regs, hutval);
     OFFSET(PT_HUVIP, pt_regs, huvip);
     OFFSET(PT_HUIP, pt_regs, huip);
-    OFFSET(PT_HUTINST, pt_regs, hutinst); 
     OFFSET(PT_HUGATP, pt_regs, hugatp);
     OFFSET(PT_HUTIMEDELTA, pt_regs, hutimedelta);
 	/* HUVS CSRs */
@@ -135,6 +132,8 @@ void asm_offsets(void)
 	/* VTIME CSRs*/
     OFFSET(PT_VTIMECMP, pt_regs, vtimecmp);
     OFFSET(PT_VTIMECTL, pt_regs, vtimectl);
+	/* VIPI CSRs */
+    OFFSET(PT_VCPUID, pt_regs, vcpuid);
 	/* U CSRs */
     OFFSET(PT_UTVEC, pt_regs, utvec);
     OFFSET(PT_UEPC, pt_regs, uepc);
