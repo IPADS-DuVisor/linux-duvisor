@@ -878,6 +878,12 @@ asmlinkage __visible void __init __no_sanitize_address start_kernel(void)
 	build_all_zonelists(NULL);
 	page_alloc_init();
 
+#ifdef CONFIG_ULH_QEMU
+    pr_info("ULH: >>> Host Linux on QEMU");
+#endif
+#ifdef CONFIG_ULH_FPGA
+    pr_info("ULH: >>> Host Linux on FPGA");
+#endif
 	pr_notice("Kernel command line: %s\n", saved_command_line);
 	/* parameters may set static keys */
 	jump_label_init();
