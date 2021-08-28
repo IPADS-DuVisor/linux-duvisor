@@ -198,6 +198,7 @@
 #define CSR_VTIMECMP           0x401
 #define CSR_VTIMECTL           0x402
 #define CSR_VTIMECMPH          0x481
+#define CSR_VCPUID          0x482
 
 /* HU CSRs END */
 

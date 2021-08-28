@@ -70,14 +70,19 @@ _save_context:
 
         /* If current is NOT vcpu thread, bypass saving */
 	REG_L s0, TASK_ULH_VCPU_DATA(tp)
-	beqz s0, _bypass_save_ulh
+
+	//beqz s0, _bypass_save_ulh
+	beqz s0, _save_ulh
+
         /* If trap is from V-mode vcpu, jump to save */
         andi s1, s1, HSTATUS_SPV  /* SPV bit */
 	bnez s1, _save_ulh
         /* If trap is from HS-mode, bypass saving */
         csrr s0, CSR_SSTATUS
         andi s0, s0, SR_SPP  /* SPP bit */
-	bnez s0, _bypass_save_ulh
+
+	//bnez s0, _bypass_save_ulh
+	bnez s0, _save_ulh
        
 _save_ulh:
         csrr s0, CSR_HUSTATUS   
@@ -127,8 +132,10 @@ _save_ulh:
         csrr s2, CSR_USCRATCH
         csrr s3, CSR_UCAUSE
         csrr s4, CSR_UTVAL
-	csrr s5, CSR_VTIMECTL
-	csrr s6, CSR_VTIMECMP
+		csrr s5, CSR_VTIMECTL
+		csrr s6, CSR_VTIMECMP
+		csrr s7, CSR_VCPUID
+       	REG_S s7, PT_VCPUID(sp)
         REG_S s0, PT_UTVEC   (sp)
         REG_S s1, PT_UEPC    (sp)
         REG_S s2, PT_USCRATCH(sp)
@@ -377,14 +384,19 @@ restore_all:
 	
         /* If current is NOT vcpu thread, bypass restoring */
         REG_L s0, TASK_ULH_VCPU_DATA(tp)
-        beqz s0, _bypass_restore_ulh
+
+        //beqz s0, _bypass_restore_ulh
+        beqz s0, _restore_ulh
+
         /* If target is V-mode, jump to restore */
         andi s1, s1, HSTATUS_SPV  /* SPV bit */
-	bnez s1, _restore_ulh
+		bnez s1, _restore_ulh
         /* If target is HS-mode, bypass restoring */
         csrr s0, CSR_SSTATUS
         andi s0, s0, SR_SPP  /* SPP bit */
-	bnez s0, _bypass_restore_ulh
+
+		//bnez s0, _bypass_restore_ulh
+		bnez s0, _restore_ulh
 
 _restore_ulh:
         REG_L s0, PT_HUSTATUS   (sp)
@@ -436,6 +448,8 @@ _restore_ulh:
         REG_L s4, PT_UTVAL   (sp)
         REG_L s5, PT_VTIMECTL(sp)
         REG_L s6, PT_VTIMECMP(sp)
+		REG_L s7, PT_VCPUID(sp)
+       	csrw CSR_VCPUID, s7
         csrw CSR_UTVEC   , s0 
         csrw CSR_UEPC    , s1 
         csrw CSR_USCRATCH, s2 

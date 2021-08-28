@@ -135,6 +135,10 @@ void asm_offsets(void)
 	/* VTIME CSRs*/
     OFFSET(PT_VTIMECMP, pt_regs, vtimecmp);
     OFFSET(PT_VTIMECTL, pt_regs, vtimectl);
+
+	/* VIPI CSRs */
+    OFFSET(PT_VCPUID, pt_regs, vcpuid);
+
 	/* U CSRs */
     OFFSET(PT_UTVEC, pt_regs, utvec);
     OFFSET(PT_UEPC, pt_regs, uepc);
