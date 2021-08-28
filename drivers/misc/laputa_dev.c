@@ -138,10 +138,18 @@ static long laputa_dev_ioctl(struct file *file,
                 | (1UL << EXC_VIRT_INST)
                 | (1UL << EXC_STORE_GUEST_PAGE_FAULT);
 
+#ifdef CONFIG_ULH_QEMU
             i_mask = (1UL << IRQ_U_SOFT)
                 | (1UL << IRQ_U_TIMER)
                 | (1UL << IRQ_U_EXT)
                 | (1UL << IRQ_U_VTIMER);
+#endif
+#ifdef CONFIG_ULH_FPGA
+            i_mask = (1UL << IRQ_U_SOFT)
+                | (1UL << IRQ_U_TIMER)
+                | (1UL << IRQ_U_EXT)
+                | (1UL << IRQ_U_TIMER);
+#endif
 
             if (deleg_info[0] & ~e_mask) {
                 pr_err("%s:%d invalid exception delegation: %lx\n", 
@@ -370,10 +378,12 @@ static int __init laputa_dev_init(void)
 {
     int err;
 
+#ifdef CONFIG_ULH_QEMU
     if (!riscv_isa_extension_available(NULL, z)) {
         pr_info("ULH: HU-extension not supported, skip installing laputa_dev\n");
         return -ENODEV;
     }
+#endif
 
     err = misc_register(&laputa_miscdev);
     if (err != 0) {
