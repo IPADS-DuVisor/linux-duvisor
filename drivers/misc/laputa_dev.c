@@ -68,7 +68,7 @@ static long laputa_dev_ioctl(struct file *file,
     switch (cmd) {
         case IOCTL_LAPUTA_GET_API_VERSION: {
             unsigned long version;
-            pr_info("IOCTL_LAPUTA_GET_API_VERSION\n");
+            pr_info("IOCTL_LAPUTA_GET_API_VERSIO\n");
             
             rc = -EFAULT;
             version = 0x12345678;
@@ -281,6 +281,19 @@ static long laputa_dev_ioctl(struct file *file,
             pr_info("IOCTL_LAPUTA_RELEASE_PFN tgid: %d, pfn: %lx\n", 
                     tgid, pfn);
 
+            rc = 0;
+            break;
+        }
+
+        case IOCTL_LAPUTA_GET_VMID: {
+            static unsigned long vmid = 0;
+            vmid += 1;
+            pr_info("IOCTL_LAPUTA_GET_VMID: 0x%lx\n", vmid);
+            
+            rc = -EFAULT;
+            if (copy_to_user((unsigned long *)uarg, &vmid, sizeof(vmid)))
+                break;
+            
             rc = 0;
             break;
         }

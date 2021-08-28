@@ -23,4 +23,6 @@
     _IOW(LAPUTA_MAGIC, 7, unsigned long)
 #define IOCTL_REMOTE_FENCE \
     _IOR(LAPUTA_MAGIC, 8, unsigned long [2])
+#define IOCTL_LAPUTA_GET_VMID \
+    _IOR(LAPUTA_MAGIC, 9, unsigned long)
 #endif
