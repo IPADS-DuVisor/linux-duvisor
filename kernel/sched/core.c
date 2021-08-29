@@ -4494,10 +4494,6 @@ static void __sched notrace __schedule(bool preempt)
 	clear_tsk_need_resched(prev);
 	clear_preempt_need_resched();
 
-	/* if ((next->ulh_vm_data) || (prev->ulh_vm_data)) {
-		pr_info("sched vcpuid %lx %lx\n", task_pt_regs(next)->vcpuid, task_pt_regs(prev)->vcpuid);
-	} */
-
 	if (likely(prev != next)) {
 		rq->nr_switches++;
 		/*
