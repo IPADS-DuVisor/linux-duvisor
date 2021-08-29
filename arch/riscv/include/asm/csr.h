@@ -142,59 +142,59 @@
 #define CSR_VSATP		0x280
 
 /* Hpervisor CSRs */
-#define CSR_HSTATUS         0x600
-#define CSR_HEDELEG         0x602
-#define CSR_HIDELEG         0x603
-#define CSR_HIE             0x604
-#define CSR_HCOUNTEREN      0x606
-#define CSR_HGEIE           0x607
-#define CSR_HTVAL           0x643
-#define CSR_HVIP            0x645
-#define CSR_HIP             0x644
-#define CSR_HTINST          0x64A
-#define CSR_HGEIP           0xE12
-#define CSR_HGATP           0x680
-#define CSR_HTIMEDELTA      0x605
-#define CSR_HTIMEDELTAH     0x615
+#define CSR_HSTATUS		0x600
+#define CSR_HEDELEG		0x602
+#define CSR_HIDELEG		0x603
+#define CSR_HIE			0x604
+#define CSR_HCOUNTEREN		0x606
+#define CSR_HGEIE		0x607
+#define CSR_HTVAL		0x643
+#define CSR_HVIP		0x645
+#define CSR_HIP			0x644
+#define CSR_HTINST		0x64A
+#define CSR_HGEIP		0xE12
+#define CSR_HGATP		0x680
+#define CSR_HTIMEDELTA		0x605
+#define CSR_HTIMEDELTAH		0x615
 
 /* User Trap Handling */
-#define CSR_UTVEC           0x005
-#define CSR_USCRATCH        0x040
-#define CSR_UEPC            0x041
-#define CSR_UCAUSE          0x042
-#define CSR_UTVAL           0x043
+#define CSR_UTVEC		0x005
+#define CSR_USCRATCH		0x040
+#define CSR_UEPC		0x041
+#define CSR_UCAUSE		0x042
+#define CSR_UTVAL		0x043
 
 /* HU CSRs BEGIN */
-#define HU_RW_CSR_OFFSET    (0x800)
-#define HU_RW_CSR_MASK      (0xff)
-#define MAP_RW_H_TO_HU(h_csr) (HU_RW_CSR_OFFSET | (HU_RW_CSR_MASK & h_csr))
+#define HU_RW_CSR_OFFSET	(0x800)
+#define HU_RW_CSR_MASK		(0xff)
+#define MAP_RW_H_TO_HU(h_csr) 	(HU_RW_CSR_OFFSET | (HU_RW_CSR_MASK & h_csr))
 
-#define CSR_HUSTATUS         MAP_RW_H_TO_HU(CSR_HSTATUS)
-#define CSR_HUEDELEG         MAP_RW_H_TO_HU(CSR_HEDELEG)
-#define CSR_HUIDELEG         MAP_RW_H_TO_HU(CSR_HIDELEG)
-#define CSR_HUIE             MAP_RW_H_TO_HU(CSR_HIE)
-#define CSR_HUCOUNTEREN      MAP_RW_H_TO_HU(CSR_HCOUNTEREN)
-#define CSR_HUTVAL           MAP_RW_H_TO_HU(CSR_HTVAL)
-#define CSR_HUVIP            MAP_RW_H_TO_HU(CSR_HVIP)
-#define CSR_HUIP             MAP_RW_H_TO_HU(CSR_HIP)
-#define CSR_HUTINST          MAP_RW_H_TO_HU(CSR_HTINST)
-#define CSR_HUGATP           MAP_RW_H_TO_HU(CSR_HGATP)
-#define CSR_HUTIMEDELTA      MAP_RW_H_TO_HU(CSR_HTIMEDELTA)
-#define CSR_HUTIMEDELTAH     MAP_RW_H_TO_HU(CSR_HTIMEDELTAH)
+#define CSR_HUSTATUS		MAP_RW_H_TO_HU(CSR_HSTATUS)
+#define CSR_HUEDELEG		MAP_RW_H_TO_HU(CSR_HEDELEG)
+#define CSR_HUIDELEG		MAP_RW_H_TO_HU(CSR_HIDELEG)
+#define CSR_HUIE		MAP_RW_H_TO_HU(CSR_HIE)
+#define CSR_HUCOUNTEREN		MAP_RW_H_TO_HU(CSR_HCOUNTEREN)
+#define CSR_HUTVAL		MAP_RW_H_TO_HU(CSR_HTVAL)
+#define CSR_HUVIP		MAP_RW_H_TO_HU(CSR_HVIP)
+#define CSR_HUIP		MAP_RW_H_TO_HU(CSR_HIP)
+#define CSR_HUTINST		MAP_RW_H_TO_HU(CSR_HTINST)
+#define CSR_HUGATP		MAP_RW_H_TO_HU(CSR_HGATP)
+#define CSR_HUTIMEDELTA		MAP_RW_H_TO_HU(CSR_HTIMEDELTA)
+#define CSR_HUTIMEDELTAH	MAP_RW_H_TO_HU(CSR_HTIMEDELTAH)
 
-#define HUVS_RW_CSR_OFFSET    (0x400)
-#define HUVS_RW_CSR_MASK      (0xff)
+#define HUVS_RW_CSR_OFFSET	(0x400)
+#define HUVS_RW_CSR_MASK	(0xff)
 #define MAP_RW_H_TO_HUVS(vs_csr) (HUVS_RW_CSR_OFFSET | (HUVS_RW_CSR_MASK & vs_csr))
 /* User level virtual CSRs */
-#define CSR_HUVSSTATUS        MAP_RW_H_TO_HUVS(CSR_VSSTATUS)
-#define CSR_HUVSIE            MAP_RW_H_TO_HUVS(CSR_VSIE)
-#define CSR_HUVSTVEC          MAP_RW_H_TO_HUVS(CSR_VSTVEC)
-#define CSR_HUVSSCRATCH       MAP_RW_H_TO_HUVS(CSR_VSSCRATCH)
-#define CSR_HUVSEPC           MAP_RW_H_TO_HUVS(CSR_VSEPC)
-#define CSR_HUVSCAUSE         MAP_RW_H_TO_HUVS(CSR_VSCAUSE)
-#define CSR_HUVSTVAL          MAP_RW_H_TO_HUVS(CSR_VSTVAL)
-#define CSR_HUVSIP            MAP_RW_H_TO_HUVS(CSR_VSIP)
-#define CSR_HUVSATP           MAP_RW_H_TO_HUVS(CSR_VSATP)
+#define CSR_HUVSSTATUS		MAP_RW_H_TO_HUVS(CSR_VSSTATUS)
+#define CSR_HUVSIE		MAP_RW_H_TO_HUVS(CSR_VSIE)
+#define CSR_HUVSTVEC		MAP_RW_H_TO_HUVS(CSR_VSTVEC)
+#define CSR_HUVSSCRATCH		MAP_RW_H_TO_HUVS(CSR_VSSCRATCH)
+#define CSR_HUVSEPC		MAP_RW_H_TO_HUVS(CSR_VSEPC)
+#define CSR_HUVSCAUSE		MAP_RW_H_TO_HUVS(CSR_VSCAUSE)
+#define CSR_HUVSTVAL		MAP_RW_H_TO_HUVS(CSR_VSTVAL)
+#define CSR_HUVSIP		MAP_RW_H_TO_HUVS(CSR_VSIP)
+#define CSR_HUVSATP		MAP_RW_H_TO_HUVS(CSR_VSATP)
 
 #define CSR_VTIMECMP		0x401
 #define CSR_VTIMECTL		0x402
