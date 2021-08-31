@@ -107,7 +107,7 @@ static inline void switch_ulh_data(struct task_struct *next)
 	struct ulh_vm_data *vm_dat = (next->group_leader->ulh_vm_data);
 	if (vm_dat) {
 		csr_write(CSR_SEDELEG, vm_dat->sedeleg);
-		csr_write(CSR_SIDELEG, vm_dat->sideleg);
+		csr_write(CSR_SIDELEG, vm_dat->sideleg | (1 << IRQ_U_SOFT));
 		csr_write(CSR_HEDELEG, vm_dat->hedeleg);
 		csr_write(CSR_HIDELEG, vm_dat->hideleg);
 		csr_write(CSR_SCOUNTEREN, vm_dat->scounteren);
