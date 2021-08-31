@@ -295,11 +295,15 @@ static long laputa_dev_ioctl(struct file *file,
 
         case IOCTL_LAPUTA_GET_VMID: {
             static unsigned long vmid = 0;
-            pr_info("IOCTL_LAPUTA_GET_VMID: 0x%lx\n", vmid);
-            vmid += 1;
+            unsigned long fetch_vmid;
+
+            fetch_vmid = __sync_fetch_and_add(&vmid, 1);
+
+            pr_info("IOCTL_LAPUTA_GET_VMID: 0x%lx\n", fetch_vmid);
             
             rc = -EFAULT;
-            if (copy_to_user((unsigned long *)uarg, &vmid, sizeof(vmid)))
+            if (copy_to_user((unsigned long *)uarg, &fetch_vmid, 
+                sizeof(fetch_vmid)))
                 break;
             
             rc = 0;
