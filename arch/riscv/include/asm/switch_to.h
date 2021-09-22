@@ -113,9 +113,6 @@ static inline void switch_ulh_data(struct task_struct *next)
 		csr_write(CSR_SCOUNTEREN, vm_dat->scounteren);
 	} else {
 		/* cancel timer and then clear huip for non-vcpu thread*/
-		csr_write(CSR_VTIMECTL, 0);
-		csr_write(CSR_VCPUID, 0);
-		csr_write(CSR_HUIE, 0);
 #ifdef CONFIG_ULH_QEMU
 		csr_write(CSR_VTIMECTL, 0);
 		csr_write(CSR_VCPUID, 0);
@@ -124,6 +121,7 @@ static inline void switch_ulh_data(struct task_struct *next)
 		wrvtimectl(0);
 		wrvcpuid(0);
 #endif
+		csr_write(CSR_HUIE, 0);
 		csr_write(CSR_SEDELEG, 0);
 		csr_write(CSR_SIDELEG, (1 << IRQ_U_SOFT));
 		csr_write(CSR_HEDELEG, 0);

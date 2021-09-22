@@ -135,7 +135,7 @@ _save_ulh:
 #endif
 #ifdef CONFIG_ULH_FPGA
 	.word 0xf0202af7
-	.word 0xe0102b73
+	.word 0xe0102b77
 #endif
 
 #ifdef CONFIG_ULH_QEMU
