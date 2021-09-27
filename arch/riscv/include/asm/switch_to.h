@@ -111,6 +111,14 @@ static inline void switch_ulh_data(struct task_struct *next)
 		csr_write(CSR_HEDELEG, vm_dat->hedeleg);
 		csr_write(CSR_HIDELEG, vm_dat->hideleg);
 		csr_write(CSR_SCOUNTEREN, vm_dat->scounteren);
+
+    	/*
+    	 * rs1 = zero
+    	 * rs2 = zero
+    	 * HFENCE.GVMA
+    	 * 0110001 00000 00000 000 00000 1110011
+    	 */
+        asm volatile(".word 0x62000073 \n");
 	} else {
 		/* cancel timer and then clear huip for non-vcpu thread*/
 #ifdef CONFIG_ULH_QEMU
