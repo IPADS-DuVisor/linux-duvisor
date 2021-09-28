@@ -99,7 +99,8 @@ modules.order
 # Sync .config
 #
 !.config
-
+!.config-qemu
+!.config-fpga
 #
 # Generated include files
 #
