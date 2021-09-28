@@ -62,7 +62,6 @@
 #define IRQ_S_EXT		9
 #define IRQ_VS_EXT		10
 #define IRQ_M_EXT		11
-#define IRQ_U_VTIMER		16
 #define IRQ_U_TIMER		4
 
 /* Exception causes */
