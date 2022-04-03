@@ -16,6 +16,7 @@
 #include <asm/sbi.h>
 
 static struct miscdevice laputa_miscdev;
+extern unsigned long *vinterrupts_mmio;
 
 static int laputa_dev_mmap(struct file *file, struct vm_area_struct *vma)
 {
@@ -68,11 +69,24 @@ static long laputa_dev_ioctl(struct file *file,
     switch (cmd) {
         case IOCTL_LAPUTA_GET_API_VERSION: {
             unsigned long version;
-            pr_info("IOCTL_LAPUTA_GET_API_VERSIO\n");
+            pr_info("IOCTL_LAPUTA_GET_API_VERSION\n");
             
             rc = -EFAULT;
             version = 0x12345678;
             if (copy_to_user((unsigned long *)uarg, &version, sizeof(version)))
+                break;
+            
+            rc = 0;
+            break;
+        }
+
+        case IOCTL_LAPUTA_GET_VINTERRUPT: {
+            unsigned long vinterrupt_addr;
+            pr_info("IOCTL_LAPUTA_GET_VINTERRUPT\n");
+            
+            rc = -EFAULT;
+            vinterrupt_addr = vinterrupts_mmio;
+            if (copy_to_user((unsigned long *)uarg, &vinterrupt_addr, sizeof(vinterrupt_addr)))
                 break;
             
             rc = 0;
