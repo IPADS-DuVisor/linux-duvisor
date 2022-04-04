@@ -25,8 +25,10 @@
     _IOR(LAPUTA_MAGIC, 8, unsigned long [2])
 #define IOCTL_LAPUTA_GET_VMID \
     _IOR(LAPUTA_MAGIC, 9, unsigned long)
-#define IOCTL_LAPUTA_GET_VINTERRUPT \
+#define IOCTL_LAPUTA_GET_VINTERRUPT_ADDR \
     _IOR(LAPUTA_MAGIC, 10, unsigned long)
 #define IOCTL_LAPUTA_GET_CPUID \
     _IOR(LAPUTA_MAGIC, 11, unsigned long)
+#define IOCTL_LAPUTA_GET_VPLIC_PAGE \
+    _IOR(LAPUTA_MAGIC, 12, unsigned long)
 #endif

@@ -50,6 +50,13 @@ static int laputa_dev_mmap(struct file *file, struct vm_area_struct *vma)
     mem_info->kaddr = mem;
     mem_info->pfn = virt_to_pfn(mem);
 
+    // map vinterrupt if size is only 1 page
+    if (size == 0x10000) {
+        mem_info->kaddr = vinterrupts_mmio;
+        mem_info->pfn = virt_to_pfn(vinterrupts_mmio);
+        pr_info("Get vinterrupt in user space! kaddr: %lx, pfn: %lx, uaddr: %lx\n", mem_info->kaddr, mem_info->pfn, mem_info->uaddr);
+    }
+
     mutex_lock(&vm_dat->mem_lock);
     list_add(&mem_info->mem_node, &vm_dat->mem_list);
     mutex_unlock(&vm_dat->mem_lock);
@@ -70,6 +77,12 @@ static long laputa_dev_ioctl(struct file *file,
         case IOCTL_LAPUTA_GET_API_VERSION: {
             unsigned long version;
             pr_info("IOCTL_LAPUTA_GET_API_VERSION\n");
+            /* 2148035338, 0x80086b0a */
+            pr_info("IOCTL_LAPUTA_GET_VINTERRUPT_ADDR %ld, %lx\n", IOCTL_LAPUTA_GET_VINTERRUPT_ADDR, IOCTL_LAPUTA_GET_VINTERRUPT_ADDR);
+            /* 2148035340, 0x80086b0c */
+            pr_info("IOCTL_LAPUTA_GET_VPLIC_PAGE %ld, %lx\n", IOCTL_LAPUTA_GET_VPLIC_PAGE, IOCTL_LAPUTA_GET_VPLIC_PAGE);
+            /* 2148035339, 0x80086b0b */
+            pr_info("IOCTL_LAPUTA_GET_CPUID %ld, %lx\n", IOCTL_LAPUTA_GET_CPUID, IOCTL_LAPUTA_GET_CPUID);
             
             rc = -EFAULT;
             version = 0x12345678;
@@ -80,9 +93,35 @@ static long laputa_dev_ioctl(struct file *file,
             break;
         }
 
-        case IOCTL_LAPUTA_GET_VINTERRUPT: {
+        case IOCTL_LAPUTA_GET_VINTERRUPT_ADDR: {
             unsigned long vinterrupt_addr;
-            pr_info("IOCTL_LAPUTA_GET_VINTERRUPT\n");
+            pr_info("IOCTL_LAPUTA_GET_VINTERRUPT_ADDR\n");
+            
+            rc = -EFAULT;
+            vinterrupt_addr = vinterrupts_mmio;
+            if (copy_to_user((unsigned long *)uarg, &vinterrupt_addr, sizeof(vinterrupt_addr)))
+                break;
+            
+            rc = 0;
+            break;
+        }
+
+        case IOCTL_LAPUTA_GET_VPLIC_PAGE: {
+            unsigned long vinterrupt_addr;
+            pr_info("IOCTL_LAPUTA_GET_VPLIC_PAGE\n");
+            
+            rc = -EFAULT;
+            vinterrupt_addr = vinterrupts_mmio;
+            if (copy_to_user((unsigned long *)uarg, &vinterrupt_addr, sizeof(vinterrupt_addr)))
+                break;
+            
+            rc = 0;
+            break;
+        }
+
+        case IOCTL_LAPUTA_GET_CPUID: {
+            unsigned long vinterrupt_addr;
+            pr_info("IOCTL_LAPUTA_GET_CPUID\n");
             
             rc = -EFAULT;
             vinterrupt_addr = vinterrupts_mmio;
