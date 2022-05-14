@@ -50,10 +50,11 @@ static int laputa_dev_mmap(struct file *file, struct vm_area_struct *vma)
     mem_info->kaddr = mem;
     mem_info->pfn = virt_to_pfn(mem);
 
-    // map vinterrupt if size is only 1 page
+    // map vinterrupt if size is 0x1000
     if (size == 0x10000) {
         mem_info->kaddr = vinterrupts_mmio;
         mem_info->pfn = virt_to_pfn(vinterrupts_mmio);
+        //pr_info("Get vinterrupt in user space! kaddr: %lx, pfn: %lx, uaddr: %lx, vinterrupts_mmio 0x%lx\n", mem_info->kaddr, mem_info->pfn, mem_info->uaddr, *vinterrupts_mmio);
         pr_info("Get vinterrupt in user space! kaddr: %lx, pfn: %lx, uaddr: %lx\n", mem_info->kaddr, mem_info->pfn, mem_info->uaddr);
     }
 
@@ -63,6 +64,8 @@ static int laputa_dev_mmap(struct file *file, struct vm_area_struct *vma)
     
     pr_info("%s: size: %lx, uaddr: %lx, pfn: %lx, kaddr: %px\n",
             __func__, size, vma->vm_start, virt_to_pfn(mem), mem);
+
+    //writel(0x0, vinterrupts_mmio);
 
     return 0;
 }
@@ -77,12 +80,6 @@ static long laputa_dev_ioctl(struct file *file,
         case IOCTL_LAPUTA_GET_API_VERSION: {
             unsigned long version;
             pr_info("IOCTL_LAPUTA_GET_API_VERSION\n");
-            /* 2148035338, 0x80086b0a */
-            pr_info("IOCTL_LAPUTA_GET_VINTERRUPT_ADDR %ld, %lx\n", IOCTL_LAPUTA_GET_VINTERRUPT_ADDR, IOCTL_LAPUTA_GET_VINTERRUPT_ADDR);
-            /* 2148035340, 0x80086b0c */
-            pr_info("IOCTL_LAPUTA_GET_VPLIC_PAGE %ld, %lx\n", IOCTL_LAPUTA_GET_VPLIC_PAGE, IOCTL_LAPUTA_GET_VPLIC_PAGE);
-            /* 2148035339, 0x80086b0b */
-            pr_info("IOCTL_LAPUTA_GET_CPUID %ld, %lx\n", IOCTL_LAPUTA_GET_CPUID, IOCTL_LAPUTA_GET_CPUID);
             
             rc = -EFAULT;
             version = 0x12345678;
@@ -106,27 +103,69 @@ static long laputa_dev_ioctl(struct file *file,
             break;
         }
 
-        case IOCTL_LAPUTA_GET_VPLIC_PAGE: {
-            unsigned long vinterrupt_addr;
-            pr_info("IOCTL_LAPUTA_GET_VPLIC_PAGE\n");
-            
-            rc = -EFAULT;
-            vinterrupt_addr = vinterrupts_mmio;
-            if (copy_to_user((unsigned long *)uarg, &vinterrupt_addr, sizeof(vinterrupt_addr)))
+        case IOCTL_LAPUTA_GET_CPUID: {
+            unsigned long cpuid;
+            unsigned long hartid;
+            pr_info("IOCTL_LAPUTA_GET_CPUID\n");
+
+            //unsigned long mhartid = csr_read(mhartid);
+            pr_info("IOCTL_LAPUTA_GET_CPUID: smp_processor_id 0x%lx\n", smp_processor_id());
+
+            if (copy_from_user(&hartid, uarg, sizeof(hartid)))
                 break;
+            
+            //rc = -EFAULT;
+            //cpuid = smp_processor_id();
+            //if (copy_to_user((unsigned long *)uarg, &cpuid, sizeof(cpuid)))
+            //    break;
+
+            for_each_cpu(cpuid, cpu_online_mask) {
+                if (cpuid_to_hartid_map(cpuid) == hartid) {
+                    copy_to_user((unsigned long *)uarg, &cpuid, sizeof(cpuid));
+                }
+            }
+
+            rc = 0;
+            break;
+        }
+
+        case IOCTL_LAPUTA_SET_VINTERRUPT: {
+            int vinterrupt_value;
+            //pr_info("**********IOCTL_LAPUTA_SET_VINTERRUPT********\n");
+
+            if (copy_from_user(&vinterrupt_value, uarg, sizeof(vinterrupt_value)))
+                break;
+
+            pr_info("IOCTL_LAPUTA_SET_VINTERRUPT value %d", vinterrupt_value);
+            
+            //rc = -EFAULT;
+            //vinterrupt_addr = vinterrupts_mmio;
+            //if (copy_to_user((unsigned long *)uarg, &vinterrupt_addr, sizeof(vinterrupt_addr)))
+            //    break;
+            writel(vinterrupt_value, vinterrupts_mmio);
             
             rc = 0;
             break;
         }
 
-        case IOCTL_LAPUTA_GET_CPUID: {
-            unsigned long vinterrupt_addr;
-            pr_info("IOCTL_LAPUTA_GET_CPUID\n");
+        case IOCTL_LAPUTA_VPLIC_CLAIM: {
+            pr_info("**********IOCTL_LAPUTA_VPLIC_CLAIM********\n");
+
+            //int vinterrupt_value;
+            //if (copy_from_user(&vinterrupt_value, uarg, sizeof(vinterrupt_value)))
+            //    break;
             
-            rc = -EFAULT;
-            vinterrupt_addr = vinterrupts_mmio;
-            if (copy_to_user((unsigned long *)uarg, &vinterrupt_addr, sizeof(vinterrupt_addr)))
-                break;
+            //rc = -EFAULT;
+            //vinterrupt_addr = vinterrupts_mmio;
+            //if (copy_to_user((unsigned long *)uarg, &vinterrupt_addr, sizeof(vinterrupt_addr)))
+            //    break;
+            unsigned long claimed_addr = 0xffffffd000202004;
+            //unsigned long claimed_addr = vinterrupts_mmio - (unsigned long)0x1f00000 + 0x200004 + 0x2000;
+            //pr_info("IOCTL_LAPUTA_VPLIC_CLAIM readl: 0x%lx - 0x%lx", claimed_addr, vinterrupts_mmio);
+            //writel(0x82, claimed_addr);
+            pr_info("IOCTL_LAPUTA_VPLIC_CLAIM readl: 0x%lx - 0x%x", claimed_addr, readl(claimed_addr));
+            //readl(claimed_addr);
+            writel(0x82, claimed_addr);
             
             rc = 0;
             break;
