@@ -359,18 +359,18 @@ static int __init plic_init(struct device_node *node,
 			continue;
 		}
 
-		pr_info("******------Set up plic_handle_irq-----*********\n");
+		//pr_info("******------Set up plic_handle_irq-----*********\n");
 
 		/* Find parent domain and register chained handler */
 		if (!plic_parent_irq && irq_find_host(parent.np)) {
 			plic_parent_irq = irq_of_parse_and_map(node, i);
-			pr_info("plic_parent_irq %d\n", plic_parent_irq);
+			//pr_info("plic_parent_irq %d\n", plic_parent_irq);
 			if (plic_parent_irq)
 				irq_set_chained_handler(plic_parent_irq,
 							plic_handle_irq);
 		}
 
-		pr_info("*******--------Set up plic_handle_irq end %d--------********\n", plic_parent_irq);
+		//pr_info("*******--------Set up plic_handle_irq end %d--------********\n", plic_parent_irq);
 
 		/*
 		 * When running in M-mode we need to ignore the S-mode handler.

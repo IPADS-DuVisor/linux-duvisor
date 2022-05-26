@@ -136,7 +136,7 @@ static long laputa_dev_ioctl(struct file *file,
             if (copy_from_user(&vinterrupt_value, uarg, sizeof(vinterrupt_value)))
                 break;
 
-            pr_info("IOCTL_LAPUTA_SET_VINTERRUPT value %d", vinterrupt_value);
+            //pr_info("IOCTL_LAPUTA_SET_VINTERRUPT value %d", vinterrupt_value);
             
             //rc = -EFAULT;
             //vinterrupt_addr = vinterrupts_mmio;
@@ -149,7 +149,7 @@ static long laputa_dev_ioctl(struct file *file,
         }
 
         case IOCTL_LAPUTA_VPLIC_CLAIM: {
-            pr_info("**********IOCTL_LAPUTA_VPLIC_CLAIM********\n");
+            //pr_info("**********IOCTL_LAPUTA_VPLIC_CLAIM********\n");
 
             //int vinterrupt_value;
             //if (copy_from_user(&vinterrupt_value, uarg, sizeof(vinterrupt_value)))
@@ -163,7 +163,7 @@ static long laputa_dev_ioctl(struct file *file,
             //unsigned long claimed_addr = vinterrupts_mmio - (unsigned long)0x1f00000 + 0x200004 + 0x2000;
             //pr_info("IOCTL_LAPUTA_VPLIC_CLAIM readl: 0x%lx - 0x%lx", claimed_addr, vinterrupts_mmio);
             //writel(0x82, claimed_addr);
-            pr_info("IOCTL_LAPUTA_VPLIC_CLAIM readl: 0x%lx - 0x%x", claimed_addr, readl(claimed_addr));
+            //pr_info("IOCTL_LAPUTA_VPLIC_CLAIM readl: 0x%lx - 0x%x", claimed_addr, readl(claimed_addr));
             //readl(claimed_addr);
             writel(0x82, claimed_addr);
             
