@@ -58,3 +58,4 @@ obj-$(CONFIG_UACCE)		+= uacce/
 obj-$(CONFIG_XILINX_SDFEC)	+= xilinx_sdfec.o
 obj-$(CONFIG_HISI_HIKEY_USB)	+= hisi_hikey_usb.o
 obj-$(CONFIG_LAPUTA_DEV)	+= laputa_dev.o
+obj-$(CONFIG_VPLIC_DEV)	+= vplic_dev.o

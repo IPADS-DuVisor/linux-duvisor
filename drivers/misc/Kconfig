@@ -473,6 +473,14 @@ config LAPUTA_DEV
 	help
 	  Say yes here to build support for the Laputa device.
 
+config VPLIC_DEV
+	tristate "Vplic device driver"
+        depends on RISCV
+        default y
+	help
+	  Say yes here to build support for the Vplic device.
+
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
