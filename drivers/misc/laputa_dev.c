@@ -25,6 +25,10 @@ static int laputa_dev_mmap(struct file *file, struct vm_area_struct *vma)
     void *mem = NULL;
     struct ulh_vm_data *vm_dat = current->group_leader->ulh_vm_data;
     struct ulh_vm_mem *mem_info = NULL;
+
+    static int pmp_cnt = 0;
+
+    unsigned long pmp_addr = 0;
     
     if (vma->vm_pgoff != 0)
         return -EINVAL;
@@ -35,7 +39,17 @@ static int laputa_dev_mmap(struct file *file, struct vm_area_struct *vma)
                     size, GFP_KERNEL))) {
         return -ENOMEM;
     }
+
+    pr_info("**********\n");
+    pr_info("***DuVisor want PMP: 0x%lx, pmp_cnt: %d\n", size, ++pmp_cnt);
+    pr_info("**********\n");
+
     mem = page_to_virt(cma_pages);
+
+    pmp_addr = page_to_phys(cma_pages);
+    pr_info("******Call M mode for vPMP********");
+    sbi_ecall(0x9, 0x0, pmp_addr, size, 0x0, 0x0, 0x0, 0x0);
+    pr_info("******Finish M mode for vPMP********");
     
     if (remap_pfn_range(vma, vma->vm_start,
                 virt_to_pfn(mem),
@@ -50,6 +64,8 @@ static int laputa_dev_mmap(struct file *file, struct vm_area_struct *vma)
     mem_info->kaddr = mem;
     mem_info->pfn = virt_to_pfn(mem);
 
+#if 0
+
     // map vinterrupt if size is 0x1000
     if (size == 0x10000) {
         mem_info->kaddr = vinterrupts_mmio;
@@ -57,6 +73,8 @@ static int laputa_dev_mmap(struct file *file, struct vm_area_struct *vma)
         //pr_info("Get vinterrupt in user space! kaddr: %lx, pfn: %lx, uaddr: %lx, vinterrupts_mmio 0x%lx\n", mem_info->kaddr, mem_info->pfn, mem_info->uaddr, *vinterrupts_mmio);
         pr_info("Get vinterrupt in user space! kaddr: %lx, pfn: %lx, uaddr: %lx\n", mem_info->kaddr, mem_info->pfn, mem_info->uaddr);
     }
+
+#endif
 
     mutex_lock(&vm_dat->mem_lock);
     list_add(&mem_info->mem_node, &vm_dat->mem_list);

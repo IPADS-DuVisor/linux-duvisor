@@ -437,7 +437,7 @@ static int vplic_dev_release(struct inode *inode, struct file *filep)
     struct ulh_vm_data *vm_dat = current->group_leader->ulh_vm_data;
     struct ulh_vm_mem *mem_info, *tmp;
     if (!vm_dat) {
-        pr_err("%s:%d tgid = %d ulh_vm_data is NULL!\n", __func__, __LINE__, tgid);
+        pr_err("%s:%d tgid = %d ulh_vm_data is NULL vplic!\n", __func__, __LINE__, tgid);
         return -EPERM;
     }
 
