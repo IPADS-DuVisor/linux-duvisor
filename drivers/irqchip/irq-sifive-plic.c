@@ -280,6 +280,13 @@ static int plic_starting_cpu(unsigned int cpu)
 #define VINTERRUPTS_OFFSET  0x1f00000
 void *vinterrupts_mmio = NULL;
 EXPORT_SYMBOL(vinterrupts_mmio);
+
+static void plic_init_unit_test(void)
+{
+	writel(0x1, vinterrupts_mmio);
+    	pr_info("[debug-host] vinterrupts_mmio write: 0x1\n"); 
+    	pr_info("[debug-host] vinterrupts_mmio read: %lx\n", readl(vinterrupts_mmio)); 
+}
 static int __init plic_init(struct device_node *node,
 		struct device_node *parent)
 {
@@ -298,11 +305,8 @@ static int __init plic_init(struct device_node *node,
 		goto out_free_priv;
 	}
     	vinterrupts_mmio = priv->regs + VINTERRUPTS_OFFSET;
-    	//pr_info("vinterrupts_mmio: %lx\n",*((unsigned long*)vinterrupts_mmio)); 
-    	pr_info("****vinterrupts_mmio: %lx\n*******", readl(vinterrupts_mmio)); 
-	//writel(0x11, vinterrupts_mmio);
 
-
+        plic_init_unit_test();
 
 	error = -EINVAL;
 	of_property_read_u32(node, "riscv,ndev", &nr_irqs);
