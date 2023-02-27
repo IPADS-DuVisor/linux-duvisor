@@ -279,7 +279,9 @@ static int plic_starting_cpu(unsigned int cpu)
 
 #define VINTERRUPTS_OFFSET  0x1f00000
 void *vinterrupts_mmio = NULL;
+phys_addr_t vplic_pa;
 EXPORT_SYMBOL(vinterrupts_mmio);
+EXPORT_SYMBOL(vplic_pa);
 
 static void plic_init_unit_test(void)
 {
@@ -294,12 +296,15 @@ static int __init plic_init(struct device_node *node,
 	u32 nr_irqs;
 	struct plic_priv *priv;
 	struct plic_handler *handler;
+        struct resource res;
 
 	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
 	if (!priv)
 		return -ENOMEM;
 
 	priv->regs = of_iomap(node, 0);
+        of_address_to_resource(node, 0, &res);
+        vplic_pa = res.start;
 	if (WARN_ON(!priv->regs)) {
 		error = -EIO;
 		goto out_free_priv;

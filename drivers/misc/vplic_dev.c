@@ -1,3 +1,6 @@
+#include "linux/dma-direct.h"
+#include "linux/export.h"
+#include "linux/gfp.h"
 #include <linux/module.h>
 #include <linux/mm.h>
 #include <linux/kernel.h>
@@ -17,63 +20,26 @@
 
 static struct miscdevice vplic_miscdev;
 extern unsigned long *vinterrupts_mmio;
+extern phys_addr_t vplic_pa;
+
+#define jch_pr(fmt, args...) \
+        pr_info("[debug-host][%s:%d] "fmt, __func__, __LINE__, ##args)
 
 static int vplic_dev_mmap(struct file *file, struct vm_area_struct *vma)
 {
     size_t size = vma->vm_end - vma->vm_start;
-//    struct page *cma_pages = NULL;
-//    void *mem = NULL;
-//    struct ulh_vm_data *vm_dat = current->group_leader->ulh_vm_data;
-//    struct ulh_vm_mem *mem_info = NULL;
     
     if (vma->vm_pgoff != 0)
         return -EINVAL;
 
-    /* TODO: check the size of mmap */
-#if 0
-    if (!(cma_pages = dma_alloc_contiguous(vplic_miscdev.this_device, 
-                    size, GFP_KERNEL))) {
-        return -ENOMEM;
-    }
-    mem = page_to_virt(cma_pages);
-    
     if (remap_pfn_range(vma, vma->vm_start,
-                virt_to_pfn(mem),
-                size, vma->vm_page_prot)) {
-        dma_free_contiguous(vplic_miscdev.this_device, cma_pages, size);
+                        vplic_pa >> PAGE_SHIFT,
+                        size, vma->vm_page_prot)) {
+        jch_pr("ERROR");
         return -EAGAIN;
     }
-
-    mem_info = kmalloc(sizeof(struct ulh_vm_mem), GFP_KERNEL);
-    mem_info->size = size;
-    mem_info->uaddr = vma->vm_start;
-    mem_info->kaddr = mem;
-    mem_info->pfn = virt_to_pfn(mem);
-#endif
-
-    // map vinterrupt if size is 0x1000
-    unsigned long kmem = kmalloc(0x1000, GFP_KERNEL);
-    if (size == 0x1000) {
-        if (remap_pfn_range(vma, vma->vm_start, 0xdf00, //virt_to_pfn(kmem), //virt_to_pfn(vinterrupts_mmio),
-            size, vma->vm_page_prot)) {
-                pr_info("*****Remap_pfn_range error!\n");
-        }
-
-        writel(0x10, kmem); // Access success
-
-        unsigned long vinterrupt_value = (1 << 28);
-        writel(vinterrupt_value | readl(vinterrupts_mmio), vinterrupts_mmio);
-        pr_info("Get vinterrupt in user space! vm_start: %lx, PFN vinterrupts_mmio: %lx, size: %lx, vinterrupts_mmio: 0x%lx\n",
-            vma->vm_start, virt_to_pfn(vinterrupts_mmio), size, vinterrupts_mmio);
-
-        //readl(vma->vm_start); // Dead????????
-        pr_info("***vma start read success\n");
-        //writel(0x10, vma->vm_start);
-        //writel(vinterrupt_value | readl(vma->vm_start), vma->vm_start);
-        pr_info("***vma start write success\n");
-        
-    }
-
+    jch_pr("vplic-va:0x%px vplic-pa:0x%llx user-addr:%lx",
+                    vinterrupts_mmio, vplic_pa, vma->vm_start);
     return 0;
 }
 
@@ -86,7 +52,7 @@ static long vplic_dev_ioctl(struct file *file,
     switch (cmd) {
         case IOCTL_LAPUTA_GET_API_VERSION: {
             unsigned long version;
-            pr_info("IOCTL_LAPUTA_GET_API_VERSION\n");
+            pr_info("ImemOCTL_LAPUTA_GET_API_VERSION\n");
             
             rc = -EFAULT;
             version = 0x12345678;
@@ -99,7 +65,7 @@ static long vplic_dev_ioctl(struct file *file,
 
         case IOCTL_LAPUTA_GET_VINTERRUPT_ADDR: {
             unsigned long vinterrupt_addr;
-            pr_info("IOCTL_LAPUTA_GET_VINTERRUPT_ADDR\n");
+            pr_info("[debug-host] IOCTL_LAPUTA_GET_VINTERRUPT_ADDR\n");
             
             rc = -EFAULT;
             vinterrupt_addr = vinterrupts_mmio;
