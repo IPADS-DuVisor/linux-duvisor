@@ -91,16 +91,16 @@ _save_ulh:
 	csrr s3,  CSR_HUIE
 	csrr s4,  CSR_HUCOUNTEREN
 	csrr s5,  CSR_HUTVAL
-	csrr s6,  CSR_HUVIP
-	csrr s7,  CSR_HUIP
+	/* csrr s6,  CSR_HUVIP */
+	/* csrr s7,  CSR_HUIP */
 	csrr s9,  CSR_HUGATP
 	csrr s10, CSR_HUTIMEDELTA
 	REG_S s0,  PT_HUSTATUS(sp)
 	REG_S s3,  PT_HUIE(sp)
 	REG_S s4,  PT_HUCOUNTEREN(sp)
 	REG_S s5,  PT_HUTVAL(sp)
-	REG_S s6,  PT_HUVIP(sp)
-	REG_S s7,  PT_HUIP(sp)
+	/* REG_S s6,  PT_HUVIP(sp) */
+	/* REG_S s7,  PT_HUIP(sp) */
 	REG_S s9,  PT_HUGATP(sp)
 	REG_S s10, PT_HUTIMEDELTA(sp)
 
@@ -111,7 +111,7 @@ _save_ulh:
 	csrr s4, CSR_HUVSEPC
 	csrr s5, CSR_HUVSCAUSE
 	csrr s6, CSR_HUVSTVAL
-	csrr s7, CSR_HUVSIP
+	/* csrr s7, CSR_HUVSIP */
 	csrr s8, CSR_HUVSATP
 	REG_S s0, PT_HUVSSTATUS (sp)
 	REG_S s1, PT_HUVSIE(sp)
@@ -120,7 +120,7 @@ _save_ulh:
 	REG_S s4, PT_HUVSEPC(sp)
 	REG_S s5, PT_HUVSCAUSE(sp)
 	REG_S s6, PT_HUVSTVAL(sp)
-	REG_S s7, PT_HUVSIP(sp)
+	/*REG_S s7, PT_HUVSIP(sp) */
 	REG_S s8, PT_HUVSATP(sp)
 
 	csrr s0, CSR_UTVEC
@@ -413,16 +413,16 @@ _restore_ulh:
 	REG_L s3, PT_HUIE(sp)
 	REG_L s4, PT_HUCOUNTEREN(sp)
 	REG_L s5, PT_HUTVAL(sp)
-	REG_L s6, PT_HUVIP(sp)
-	REG_L s7, PT_HUIP(sp)
+	/* REG_L s6, PT_HUVIP(sp) */
+	/* REG_L s7, PT_HUIP(sp) */
 	REG_L s9, PT_HUGATP(sp)
 	REG_L s10, PT_HUTIMEDELTA(sp)
 	csrw CSR_HUSTATUS, s0 
 	csrw CSR_HUIE, s3 
 	csrw CSR_HUCOUNTEREN, s4 
 	csrw CSR_HUTVAL, s5 
-	csrw CSR_HUVIP, s6 
-	csrw CSR_HUIP, s7 
+	/* csrw CSR_HUVIP, s6  */
+	/* csrw CSR_HUIP, s7 */
 	csrw CSR_HUGATP, s9 
 	csrw CSR_HUTIMEDELTA, s10
 
@@ -433,7 +433,7 @@ _restore_ulh:
 	REG_L s4, PT_HUVSEPC(sp)
 	REG_L s5, PT_HUVSCAUSE(sp)
 	REG_L s6, PT_HUVSTVAL(sp)
-	REG_L s7, PT_HUVSIP(sp)
+	/* REG_L s7, PT_HUVSIP(sp) */
 	REG_L s8, PT_HUVSATP(sp)
 	csrw CSR_HUVSSTATUS, s0 
 	csrw CSR_HUVSIE, s1 
@@ -442,7 +442,7 @@ _restore_ulh:
 	csrw CSR_HUVSEPC, s4 
 	csrw CSR_HUVSCAUSE, s5 
 	csrw CSR_HUVSTVAL, s6
-	csrw CSR_HUVSIP, s7
+	/* csrw CSR_HUVSIP, s7 */
 	csrw CSR_HUVSATP, s8
 
 	REG_L s0, PT_UTVEC(sp)
