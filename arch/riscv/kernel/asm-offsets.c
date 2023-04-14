@@ -66,6 +66,9 @@ void asm_offsets(void)
 	OFFSET(TASK_THREAD_F30, task_struct, thread.fstate.f[30]);
 	OFFSET(TASK_THREAD_F31, task_struct, thread.fstate.f[31]);
 	OFFSET(TASK_THREAD_FCSR, task_struct, thread.fstate.fcsr);
+	
+	OFFSET(TASK_ULH_VM_DATA, task_struct, ulh_vm_data);
+	OFFSET(TASK_ULH_VCPU_DATA, task_struct, ulh_vcpu_data);
 
 	DEFINE(PT_SIZE, sizeof(struct pt_regs));
 	OFFSET(PT_EPC, pt_regs, epc);
@@ -105,6 +108,38 @@ void asm_offsets(void)
 	OFFSET(PT_STATUS, pt_regs, status);
 	OFFSET(PT_BADADDR, pt_regs, badaddr);
 	OFFSET(PT_CAUSE, pt_regs, cause);
+	/* HSTATUS */
+	OFFSET(PT_HSTATUS, pt_regs, hstatus);
+	/* HU CSRs */
+	OFFSET(PT_HUSTATUS, pt_regs, hustatus);
+	OFFSET(PT_HUIE, pt_regs, huie);
+	OFFSET(PT_HUCOUNTEREN, pt_regs, hucounteren); 
+	OFFSET(PT_HUTVAL, pt_regs, hutval);
+	OFFSET(PT_HUVIP, pt_regs, huvip);
+	OFFSET(PT_HUIP, pt_regs, huip);
+	OFFSET(PT_HUGATP, pt_regs, hugatp);
+	OFFSET(PT_HUTIMEDELTA, pt_regs, hutimedelta);
+	/* HUVS CSRs */
+	OFFSET(PT_HUVSSTATUS, pt_regs, huvsstatus);
+	OFFSET(PT_HUVSIE, pt_regs, huvsie);
+	OFFSET(PT_HUVSTVEC, pt_regs, huvstvec);
+	OFFSET(PT_HUVSSCRATCH, pt_regs, huvsscratch);
+	OFFSET(PT_HUVSEPC, pt_regs, huvsepc);
+	OFFSET(PT_HUVSCAUSE, pt_regs, huvscause);
+	OFFSET(PT_HUVSTVAL, pt_regs, huvstval);
+	OFFSET(PT_HUVSIP, pt_regs, huvsip);
+	OFFSET(PT_HUVSATP, pt_regs, huvsatp);
+	/* VTIME CSRs*/
+	OFFSET(PT_VTIMECMP, pt_regs, vtimecmp);
+	OFFSET(PT_VTIMECTL, pt_regs, vtimectl);
+	/* VIPI CSRs */
+	OFFSET(PT_VCPUID, pt_regs, vcpuid);
+	/* U CSRs */
+	OFFSET(PT_UTVEC, pt_regs, utvec);
+	OFFSET(PT_UEPC, pt_regs, uepc);
+	OFFSET(PT_USCRATCH, pt_regs, uscratch);
+	OFFSET(PT_UCAUSE, pt_regs, ucause);
+	OFFSET(PT_UTVAL, pt_regs, utval);
 
 	/*
 	 * THREAD_{F,X}* might be larger than a S-type offset can handle, but

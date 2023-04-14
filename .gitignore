@@ -96,6 +96,12 @@ modules.order
 !.mailmap
 
 #
+# Sync .config
+#
+!.config
+!.config-qemu
+!.config-fpga
+#
 # Generated include files
 #
 /include/config/
@@ -155,3 +161,7 @@ x509.genkey
 
 # Documentation toolchain
 sphinx_*/
+
+# DuVisor test binary file
+ioctl_test
+*.dump

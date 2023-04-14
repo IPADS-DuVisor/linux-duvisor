@@ -5,6 +5,17 @@
 #
 mainmenu "Linux/$(ARCH) $(KERNELVERSION) Kernel Configuration"
 
+choice
+    prompt "Target platform"
+
+config ULH_QEMU
+    bool "ULH on QEMU"
+
+config ULH_FPGA
+    bool "ULH on FPGA"
+
+endchoice
+
 source "scripts/Kconfig.include"
 
 source "init/Kconfig"

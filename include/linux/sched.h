@@ -10,6 +10,7 @@
 #include <uapi/linux/sched.h>
 
 #include <asm/current.h>
+#include <asm/ulh.h>
 
 #include <linux/pid.h>
 #include <linux/sem.h>
@@ -647,6 +648,14 @@ struct task_struct {
 #endif
 	/* -1 unrunnable, 0 runnable, >0 stopped: */
 	volatile long			state;
+
+	/* FIXME: We put ulh_data here to avoid invalid operands due to 
+	 * exceeding instruction length limit (4 bytes), but this field
+	 * may not be scheduling-critical item and should be placed in
+	 * randomized_struct_fields below.
+	 */
+	struct ulh_vm_data		*ulh_vm_data;
+	struct ulh_vcpu_data		*ulh_vcpu_data;
 
 	/*
 	 * This begins the randomizable portion of task_struct. Only

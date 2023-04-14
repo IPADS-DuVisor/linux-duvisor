@@ -234,10 +234,14 @@ static void plic_handle_irq(struct irq_desc *desc)
 
 	while ((hwirq = readl(claim))) {
 		int irq = irq_find_mapping(handler->priv->irqdomain, hwirq);
+		//pr_info("host plic_handle_irq hwirq: %ld 0x%lx, irq: %ld 0x%lx, claim: 0x%lx\n", hwirq, hwirq, irq, irq, claim);
+		/* if (hwirq == 129) {
+			pr_info("+0x1000 claim read: 0x%lx", readl(claim+0x1000));
+		} */
 
 		if (unlikely(irq <= 0))
-			pr_warn_ratelimited("can't find mapping for hwirq %lu\n",
-					hwirq);
+			pr_warn_ratelimited("host can't find mapping for hwirq %lu, irq: %d\n",
+					hwirq, irq);
 		else
 			generic_handle_irq(irq);
 	}
@@ -273,6 +277,18 @@ static int plic_starting_cpu(unsigned int cpu)
 	return 0;
 }
 
+#define VINTERRUPTS_OFFSET  0x1f00000
+void *vinterrupts_mmio = NULL;
+phys_addr_t vplic_pa;
+EXPORT_SYMBOL(vinterrupts_mmio);
+EXPORT_SYMBOL(vplic_pa);
+
+/* static void plic_init_unit_test(void)
+{
+	writel(0x1, vinterrupts_mmio);
+    	pr_info("[debug-host] vinterrupts_mmio write: 0x1\n"); 
+    	pr_info("[debug-host] vinterrupts_mmio read: %lx\n", readl(vinterrupts_mmio)); 
+} */
 static int __init plic_init(struct device_node *node,
 		struct device_node *parent)
 {
@@ -280,16 +296,22 @@ static int __init plic_init(struct device_node *node,
 	u32 nr_irqs;
 	struct plic_priv *priv;
 	struct plic_handler *handler;
+        struct resource res;
 
 	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
 	if (!priv)
 		return -ENOMEM;
 
 	priv->regs = of_iomap(node, 0);
+        of_address_to_resource(node, 0, &res);
+        vplic_pa = res.start;
 	if (WARN_ON(!priv->regs)) {
 		error = -EIO;
 		goto out_free_priv;
 	}
+    	vinterrupts_mmio = priv->regs + VINTERRUPTS_OFFSET;
+
+        // plic_init_unit_test();
 
 	error = -EINVAL;
 	of_property_read_u32(node, "riscv,ndev", &nr_irqs);
@@ -305,6 +327,17 @@ static int __init plic_init(struct device_node *node,
 			&plic_irqdomain_ops, priv);
 	if (WARN_ON(!priv->irqdomain))
 		goto out_iounmap;
+
+	/* Test mapping */
+	//pr_info("****--------host test mapping-----****** 0x%lx", priv->regs + CONTEXT_BASE + 1 * CONTEXT_PER_HART);
+	//pr_info("****--------test mapping-----****** gpa: 0x%lx", virt_to_phys(0xffffffd000201004));
+	//pr_info("****--------test mapping-----******");
+	//pr_info("****--------test mapping-----0x%lx******", readl(0xffffffd000201004));
+	//readl(0xffffffd000201004);
+	//pr_info("*******---------test end-------*****");
+	//pr_info("*******---------test end-------*****");
+	//pr_info("*******---------test end-------*****");
+	//pr_info("*******---------test end-------*****");
 
 	for (i = 0; i < nr_contexts; i++) {
 		struct of_phandle_args parent;
@@ -335,13 +368,18 @@ static int __init plic_init(struct device_node *node,
 			continue;
 		}
 
+		//pr_info("******------Set up plic_handle_irq-----*********\n");
+
 		/* Find parent domain and register chained handler */
 		if (!plic_parent_irq && irq_find_host(parent.np)) {
 			plic_parent_irq = irq_of_parse_and_map(node, i);
+			//pr_info("plic_parent_irq %d\n", plic_parent_irq);
 			if (plic_parent_irq)
 				irq_set_chained_handler(plic_parent_irq,
 							plic_handle_irq);
 		}
+
+		//pr_info("*******--------Set up plic_handle_irq end %d--------********\n", plic_parent_irq);
 
 		/*
 		 * When running in M-mode we need to ignore the S-mode handler.

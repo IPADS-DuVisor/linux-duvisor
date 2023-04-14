@@ -44,6 +44,41 @@ struct pt_regs {
 	unsigned long t4;
 	unsigned long t5;
 	unsigned long t6;
+	/* HSTATUS */
+	unsigned long hstatus;
+	/* HU CSRs */
+	unsigned long hustatus;
+	unsigned long huedeleg;
+	unsigned long huideleg;
+	unsigned long huie;
+	unsigned long hucounteren;
+	unsigned long hutval;
+	unsigned long huvip;
+	unsigned long huip;
+	unsigned long hutinst;
+	unsigned long hugatp;
+	unsigned long hutimedelta;
+	/* HUVS CSRs */
+	unsigned long huvsstatus;
+	unsigned long huvsie;
+	unsigned long huvstvec;
+	unsigned long huvsscratch;
+	unsigned long huvsepc;
+	unsigned long huvscause;
+	unsigned long huvstval;
+	unsigned long huvsip;
+	unsigned long huvsatp;
+	/* vtime CSRs*/
+	unsigned long vtimecmp;
+	unsigned long vtimectl;
+	/* vipi CSRs */
+	unsigned long vcpuid;
+	/* U CSRs */
+	unsigned long utvec;
+	unsigned long uepc;
+	unsigned long uscratch;
+	unsigned long ucause;
+	unsigned long utval;
 	/* Supervisor/Machine CSRs */
 	unsigned long status;
 	unsigned long badaddr;

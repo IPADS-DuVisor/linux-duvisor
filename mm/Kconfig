@@ -2,6 +2,9 @@
 
 menu "Memory Management options"
 
+config BREAKDOWN
+    tristate "breakdown"
+
 config SELECT_MEMORY_MODEL
 	def_bool y
 	depends on ARCH_SELECT_MEMORY_MODEL

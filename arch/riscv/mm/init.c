@@ -13,6 +13,7 @@
 #include <linux/of_fdt.h>
 #include <linux/libfdt.h>
 #include <linux/set_memory.h>
+#include <linux/dma-map-ops.h>
 
 #include <asm/fixmap.h>
 #include <asm/tlbflush.h>
@@ -206,6 +207,8 @@ void __init setup_bootmem(void)
 	memblock_reserve(dtb_early_pa, fdt_totalsize(dtb_early_va));
 
 	early_init_fdt_scan_reserved_mem();
+    /* TODO: backports latest Linux */
+    dma_contiguous_reserve(0);
 	memblock_allow_resize();
 	memblock_dump_all();
 }
